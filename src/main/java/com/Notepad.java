@@ -85,7 +85,7 @@ public class Notepad {
 	}
 
 	public void openTab(String name, String text, File file) {
-		var tab = new NotepadTab(name, text, tabs, file);
+		var tab = new NotepadTab(name, text, this, file);
 		openTabs.add(tab);
 		AppSettings.instance().addObserver(tab);
 	}
