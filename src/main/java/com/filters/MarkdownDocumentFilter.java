@@ -1,5 +1,6 @@
 package com.filters;
 
+import com.*;
 import org.markdownj.*;
 
 import javax.swing.*;
@@ -8,7 +9,7 @@ import javax.xml.parsers.*;
 
 public class MarkdownDocumentFilter extends DocumentFilter {
 	// the JTextPane that we will listen to
-	private JTextPane textPane;
+	private final JTextPane textPane;
 
 	// the Markdown parser that we will use to convert Markdown to HTML
 	private MarkdownProcessor markdownProcessor;
@@ -26,7 +27,15 @@ public class MarkdownDocumentFilter extends DocumentFilter {
 	}
 
 	public String getText() {
-		return markdownText;
+		//return markdownText;
+		try {
+			var doc = textPane.getStyledDocument();
+			System.out.println(doc.getText(0, doc.getLength()));
+			return doc.getText(0, doc.getLength());
+		} catch (BadLocationException e) {
+			Actions.assertDialog(false, e.getMessage());
+		}
+		return null;
 	}
 
 	@Override

@@ -16,7 +16,6 @@ public class Notepad {
 
 	private List<NotepadTab> openTabs = new ArrayList<>();
 	protected JTabbedPane tabs;
-	private Toolbar toolbar;
 	private Titlebar titleBar;
 	private JFrame frame;
 

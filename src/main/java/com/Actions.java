@@ -34,7 +34,7 @@ public abstract class Actions {
 		try {
 			saveWorkSpace();
 			AppSettings.serialize();
-		} catch (FileNotFoundException e) {
+		} catch (Exception e) {
 			assertDialog(false, e.getMessage());
 		}
 		notepad.getFrame().dispose();
@@ -95,7 +95,7 @@ public abstract class Actions {
 		}
 	}
 
-	private static void saveWorkSpace() throws FileNotFoundException {
+	private static void saveWorkSpace() throws Exception {
 		File workdspace = new File(appDataDir, "workspace.txt");
 		var tabs = notepad.getOpenTabs();
 
@@ -109,11 +109,11 @@ public abstract class Actions {
 		writer.close();
 	}
 
-	private static File saveTab(NotepadTab tab) throws FileNotFoundException {
+	private static File saveTab(NotepadTab tab) throws Exception {
 		// Check if it is a file
 		if (tab.getFile() != null && tab.getFile().exists()) {
 			PrintWriter writer = new PrintWriter(new FileOutputStream(tab.getFile()));
-			writer.println(tab.getFilter().getText());
+			tab.write(writer);
 			writer.close();
 			return tab.getFile();
 		}
@@ -121,7 +121,7 @@ public abstract class Actions {
 		// Otherwise save it to temp
 		File file = new File(appDataDir, tab.getTabTitle());
 		PrintWriter writer = new PrintWriter(new FileOutputStream(file));
-		writer.println(tab.getFilter().getText());
+		tab.write(writer);
 		writer.close();
 		return file;
 	}
