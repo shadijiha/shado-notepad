@@ -24,7 +24,6 @@ public class NotepadTab extends JPanel implements Observer<AppSettings> {
 
 		// Add the text editor to a new tab in the JTabbedPane
 		notepad.tabs.addTab(name, this);
-
 	}
 
 	public String getTabTitle() {
@@ -42,12 +41,11 @@ public class NotepadTab extends JPanel implements Observer<AppSettings> {
 	public void save() {
 		// Show save as
 		if (file == null) {
-			JFileChooser chooser = new JFileChooser();
-			chooser.setDialogTitle("Save " + title + " as");
+			var chooser = new FileChooser("Custom Shado Rich text format (*.srtf)", "srtf");
+			var file = chooser.saveDialog("Save " + title + " as");
 
-			int userSelection = chooser.showSaveDialog(Actions.getAppInstance().getFrame());
-			if (userSelection == JFileChooser.APPROVE_OPTION) {
-				this.file = chooser.getSelectedFile();
+			if (file != null) {
+				this.file = file;
 			} else {
 				return;
 			}

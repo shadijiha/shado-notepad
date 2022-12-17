@@ -4,12 +4,10 @@ import com.*;
 import com.filters.*;
 
 import javax.swing.*;
-import javax.swing.filechooser.*;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.font.*;
-import java.io.*;
 import java.util.*;
 
 public class Toolbar {
@@ -88,22 +86,17 @@ public class Toolbar {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					// Show a file chooser to let the user select an image file
-					JFileChooser fileChooser = new JFileChooser();
-					fileChooser.setAcceptAllFileFilterUsed(false);
-					FileNameExtensionFilter filter = new FileNameExtensionFilter("Image", "png", "jpg", "jpeg");
-					fileChooser.addChoosableFileFilter(filter);
+					var chooser = new FileChooser("Image", FileChooser.ImageFiles);
+					chooser.getNative().setAcceptAllFileFilterUsed(false);
 
-					int result = fileChooser.showOpenDialog(notepad.getFrame());
-					if (result == JFileChooser.APPROVE_OPTION) {
-						File file = fileChooser.getSelectedFile();
-
+					//fileChooser.addChoosableFileFilter(filter);
+					var file = chooser.openDialog();
+					if (file != null) {
 						try {
-							//addImageAsBase64(markdownPane, file);
 							markdownPane.insertImageAsIcon(file, 200);
 						} catch (Exception ex) {
 							Actions.assertDialog(ex);
 						}
-
 					}
 				}
 			});

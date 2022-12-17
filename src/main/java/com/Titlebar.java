@@ -1,8 +1,9 @@
 package com;
 
+import com.editor.*;
+
 import javax.swing.*;
 import javax.swing.border.*;
-import javax.swing.filechooser.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -27,7 +28,7 @@ public class Titlebar extends JPanel {
 		setBackground(UIManager.getColor("InternalFrame.inactiveTitleBackground"));
 		setLayout(new BorderLayout());
 		setPreferredSize(new Dimension(frame.getWidth(), 40));
-		setBorder(new EmptyBorder(5, 5, 5, 5));
+		setBorder(new EmptyBorder(0, 0, 0, 0));
 
 		// Set the layout of the title bar to BorderLayout
 		setLayout(new BorderLayout());
@@ -39,6 +40,7 @@ public class Titlebar extends JPanel {
 
 		// Add the title to the WEST side of the title bar
 		JPanel menuTitleContainer = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		menuTitleContainer.setBorder(new EmptyBorder(0, 0, 0, 0));
 		menuTitleContainer.setBackground(getBackground());
 		setupMenus(menuTitleContainer, frame);
 		var menuTitleContainerEmptySpace = new JLabel();
@@ -184,15 +186,9 @@ public class Titlebar extends JPanel {
 	}
 
 	private void openFile(ActionEvent actionEvent) {
-		JFileChooser chooser = new JFileChooser();
-		FileNameExtensionFilter filter = new FileNameExtensionFilter("TEXT FILES",
-				"txt", "text", "rtf", "js", "json", "yaml", "cpp", "c", "h", "ts", "py", "md", "java", "cs");
-		chooser.setFileFilter(filter);
-		chooser.setDialogTitle("Open file");
-
-		int userSelection = chooser.showOpenDialog(notepad.getFrame());
-		if (userSelection == JFileChooser.APPROVE_OPTION) {
-			var file = chooser.getSelectedFile();
+		FileChooser chooser = new FileChooser("Text files", FileChooser.TextFiles);
+		var file = chooser.openDialog();
+		if (file != null) {
 			notepad.openTab(file);
 		}
 	}

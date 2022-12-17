@@ -21,18 +21,6 @@ public class Notepad {
 
 	public static void main(String[] args) {
 		Notepad notepad = new Notepad();
-		//notepad.openTab("tab1", "# This is a heading\n"
-		//		+ "This is a paragraph with *italic* and **bold** text.\n"
-		//		+ "Here is a list:\n"
-		//		+ "* Item 1\n"
-		//		+ "* Item 2\n"
-		//		+ "    * Nested item 1\n"
-		//		+ "    * Nested item 2\n"
-		//		+ "Here is a [link](https://github.com/johanneskropf/MarkdownPane) to the MarkdownPane library.\n"
-		//		+ "```" +
-		//		"public static int x = 10;" +
-		//		"```", null);
-		//notepad.openTab("Queen", "Cait my Queen <3 <3 💓", null);
 	}
 
 	public Notepad() {
@@ -84,8 +72,19 @@ public class Notepad {
 	}
 
 	public void openTab(String name, String text, File file) {
+
+		// Check if the tab is already open
+		Optional<NotepadTab> isOpen = openTabs.stream().filter(e -> e.getFile().equals(file)).findFirst();
+		if (isOpen.isPresent()) {
+			tabs.setSelectedIndex(openTabs.indexOf(isOpen.get()));
+			return;
+		}
+
 		var tab = new NotepadTab(name, text, this, file);
 		openTabs.add(tab);
+
+		tabs.setSelectedIndex(tabs.getTabCount() - 1);
+
 		AppSettings.instance().addObserver(tab);
 	}
 
@@ -129,9 +128,5 @@ public class Notepad {
 
 	public List<NotepadTab> getOpenTabs() {
 		return openTabs;
-	}
-
-	public JTabbedPane getTabs() {
-		return tabs;
 	}
 }

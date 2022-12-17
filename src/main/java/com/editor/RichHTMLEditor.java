@@ -24,11 +24,12 @@ public class RichHTMLEditor extends JTextPane {
 		super();
 		this.notepad = notepad;
 
-		//var iosFont = new Font(AppSettings.get("font_family"), Font.PLAIN, (int) AppSettings.getNum("font_size"));
-		putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true);
-		//setFont(iosFont);
-		setFocusable(true);
 		setContentType("text/html");
+
+		var iosFont = new Font(AppSettings.get("font_family"), Font.PLAIN, (int) AppSettings.getNum("font_size"));
+		putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, true);
+		setFont(iosFont);
+		setFocusable(true);
 
 		//setText(text);
 		try {
@@ -139,9 +140,6 @@ public class RichHTMLEditor extends JTextPane {
 					for (File file : droppedFiles) {
 						// process files
 						notepad.openTab(file);
-
-						// Focus last openned
-						notepad.getTabs().setSelectedIndex(notepad.getTabs().getTabCount() - 1);
 					}
 				} catch (Exception ex) {
 					Actions.assertDialog(false, ex.getMessage());
