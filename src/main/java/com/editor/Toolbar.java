@@ -2,6 +2,7 @@ package com.editor;
 
 import com.*;
 import com.filters.*;
+import com.utils.*;
 
 import javax.swing.*;
 import javax.swing.text.*;

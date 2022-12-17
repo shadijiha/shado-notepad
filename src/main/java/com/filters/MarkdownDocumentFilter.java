@@ -1,6 +1,6 @@
 package com.filters;
 
-import com.*;
+import com.utils.*;
 import org.markdownj.*;
 
 import javax.swing.*;

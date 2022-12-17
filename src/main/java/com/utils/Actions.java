@@ -1,4 +1,6 @@
-package com;
+package com.utils;
+
+import com.*;
 
 import javax.swing.*;
 import java.io.*;
@@ -38,6 +40,7 @@ public abstract class Actions {
 			assertDialog(false, e.getMessage());
 		}
 		notepad.getFrame().dispose();
+		Util.shutdown();
 	}
 
 	public static void minimize() {

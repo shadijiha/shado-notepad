@@ -1,6 +1,8 @@
-package com;
+package com.utils;
 
+import com.*;
 import com.formdev.flatlaf.*;
+import com.utils.*;
 import mdlaf.*;
 import mdlaf.themes.*;
 

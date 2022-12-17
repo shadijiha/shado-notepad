@@ -1,6 +1,6 @@
 package com.editor;
 
-import com.*;
+import com.utils.*;
 
 import javax.swing.*;
 import javax.swing.filechooser.*;
@@ -14,6 +14,11 @@ public class FileChooser {
 	private final JFileChooser chooser;
 
 	public FileChooser(String description, String... extensions) {
+		if (lastDir == null)	{
+			String chooser_dir = AppSettings.get("chooser_dir");
+			lastDir = chooser_dir.isEmpty() ? null : new File(chooser_dir);
+		}
+
 		chooser = new JFileChooser(lastDir);
 
 		FileNameExtensionFilter filter = new FileNameExtensionFilter(description,
@@ -28,6 +33,7 @@ public class FileChooser {
 		if (userSelection == JFileChooser.APPROVE_OPTION) {
 			var file = chooser.getSelectedFile();
 			lastDir = file.getParentFile();
+			AppSettings.set("chooser_dir", lastDir.getAbsolutePath());
 			return file;
 		}
 

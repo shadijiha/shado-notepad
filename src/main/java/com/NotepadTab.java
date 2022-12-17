@@ -2,6 +2,7 @@ package com;
 
 import com.editor.*;
 import com.observer.*;
+import com.utils.*;
 
 import javax.swing.*;
 import java.awt.*;

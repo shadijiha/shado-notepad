@@ -1,4 +1,4 @@
-package com;
+package com.utils;
 
 import com.google.gson.*;
 import com.google.gson.annotations.*;
@@ -73,15 +73,18 @@ public class AppSettings extends Observable<AppSettings> {
 	}
 
 	public static void serialize() {
-		SwingUtilities.invokeLater(() -> {
-			String json = gson.toJson(instance, instance.getClass());
+		Util.execute(() -> {
+			synchronized (gson){
 
-			File file = new File(Actions.getAppDataDir(), "settings.json");
-			try (PrintWriter writer = new PrintWriter(new FileOutputStream(file))) {
-				writer.println(json);
-				writer.close();
-			} catch (FileNotFoundException e) {
-				Actions.assertDialog(false, "Unable to save settings\n\n" + e.getMessage());
+				String json = gson.toJson(instance, instance.getClass());
+
+				File file = new File(Actions.getAppDataDir(), "settings.json");
+				try (PrintWriter writer = new PrintWriter(new FileOutputStream(file))) {
+					writer.println(json);
+					writer.close();
+				} catch (FileNotFoundException e) {
+					Actions.assertDialog(false, "Unable to save settings\n\n" + e.getMessage());
+				}
 			}
 		});
 	}
