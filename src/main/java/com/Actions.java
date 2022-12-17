@@ -126,4 +126,11 @@ public abstract class Actions {
 		return file;
 	}
 
+	public static void assertDialog(String customMessage, Exception ex) {
+		Actions.assertDialog(false, customMessage + "\n" + ex.getMessage());
+	}
+
+	public static void assertDialog(Exception e) {
+		assertDialog("", e);
+	}
 }

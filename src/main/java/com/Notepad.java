@@ -130,4 +130,8 @@ public class Notepad {
 	public List<NotepadTab> getOpenTabs() {
 		return openTabs;
 	}
+
+	public JTabbedPane getTabs() {
+		return tabs;
+	}
 }
