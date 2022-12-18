@@ -16,7 +16,8 @@ public class FileChooser {
 	public FileChooser(String description, String... extensions) {
 		if (lastDir == null)	{
 			String chooser_dir = AppSettings.get("chooser_dir");
-			lastDir = chooser_dir.isEmpty() ? null : new File(chooser_dir);
+			var file = new File(chooser_dir);
+			lastDir = chooser_dir.isEmpty() || !file.exists() ? null : file;
 		}
 
 		chooser = new JFileChooser(lastDir);

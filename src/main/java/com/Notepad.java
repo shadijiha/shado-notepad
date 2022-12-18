@@ -86,7 +86,7 @@ public class Notepad {
 		var tab = new NotepadTab(name, text, this, file);
 		openTabs.add(tab);
 
-		tabs.setSelectedIndex(tabs.getTabCount() - 1);
+		setSelectedTab(tabs.getTabCount() - 1);
 
 		AppSettings.instance().addObserver(tab);
 	}
@@ -100,7 +100,7 @@ public class Notepad {
 			var content = Files.readString(file.toPath());
 			openTab(file.getName(), content, file);
 		} catch (IOException e) {
-			e.printStackTrace();
+			Actions.assertDialog(e);
 		}
 	}
 
@@ -131,5 +131,13 @@ public class Notepad {
 
 	public List<NotepadTab> getOpenTabs() {
 		return openTabs;
+	}
+
+	public NotepadTab getSelectedTab() {
+		return getOpenTabs().get(tabs.getSelectedIndex());
+	}
+
+	public void setSelectedTab(int index)	{
+		tabs.setSelectedIndex(index);
 	}
 }

@@ -26,6 +26,11 @@ public abstract class Util {
 	}
 
 	public static void shutdown()	{
-		instance.executors.shutdown();
+		try {
+			instance.executors.shutdown();
+			instance.executors.awaitTermination(2, TimeUnit.MINUTES);
+		} catch (InterruptedException e) {
+			Actions.assertDialog(e);
+		}
 	}
 }

@@ -1,31 +1,42 @@
 package com.utils;
 
 import com.*;
+import com.shadocloud.nest.*;
 
 import javax.swing.*;
 import java.io.*;
+import java.net.*;
+import java.nio.charset.*;
 import java.nio.file.*;
+import java.util.*;
+import java.util.stream.*;
 
 public abstract class Actions {
 
 	private static Notepad notepad = null;
-	private static File appDataDir = null;
+	static File appDataDir = new File(System.getenv("LOCALAPPDATA") + "/shado-notepad");;
+	private static Date workspaceDate = null;
 
+	/**
+	 * CAlled on app start
+	 * @param frame
+	 */
 	public static void setNotepadSingleton(Notepad frame) {
 		try {
 			Actions.notepad = frame;
 			ThemeManager.notepad = frame;
-			boolean exists = verifyAppdataDir();
-
-			if (exists)
-				loadWorkSpace();
 
 			// Init settings
 			AppSettings.instance();
 
+			Workspace.LocalPath = new File(Actions.appDataDir, "workspace.txt");
+			loadWorkSpace();
+
 			// Set the theme that is in the settings
 			ThemeManager.setTheme(AppSettings.get("theme"));
-		} catch (IOException e) {
+
+			AppSettings.instance().addObserver(new ShadoCloudFieldsObserver());
+		} catch (Exception e) {
 			assertDialog(false, e.getMessage());
 		}
 	}
@@ -34,13 +45,22 @@ public abstract class Actions {
 		assert notepad != null : "You need to call setFrame at least once";
 
 		try {
+			// Logout from Shado cloud
+			Util.execute(() -> {
+				try {
+					AppSettings.client.auth.logout();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			});
+
 			saveWorkSpace();
 			AppSettings.serialize();
 		} catch (Exception e) {
 			assertDialog(false, e.getMessage());
 		}
-		notepad.getFrame().dispose();
 		Util.shutdown();
+		notepad.getFrame().dispose();
 	}
 
 	public static void minimize() {
@@ -48,8 +68,10 @@ public abstract class Actions {
 	}
 
 	public static void assertDialog(boolean b, String message) {
-		if (!b)
-			JOptionPane.showMessageDialog(notepad.getFrame(), message);
+		if (!b) {
+			System.out.println(message);
+			SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(notepad.getFrame(), message));
+		}
 	}
 
 	public static File getAppDataDir() {
@@ -61,16 +83,13 @@ public abstract class Actions {
 	}
 
 	public static File getWorkspaceFileDir()	{
-		return new File(appDataDir, "workspace.txt");
+		return Workspace.LocalPath;
 	}
 
 	/**
 	 * Helper functions
 	 */
 	private static boolean verifyAppdataDir() {
-		var appdata = System.getenv("LOCALAPPDATA") + "/shado-notepad";
-		appDataDir = new File(appdata);
-
 		if (!appDataDir.exists()) {
 			var b = appDataDir.mkdirs();
 			assertDialog(b, "Failed to access Local AppData directory. App may not work correctly!");
@@ -80,57 +99,103 @@ public abstract class Actions {
 		return getWorkspaceFileDir().exists();
 	}
 
-	private static void loadWorkSpace() throws IOException {
+	private static void loadWorkSpace() throws Exception {
 		File workdspace = getWorkspaceFileDir();
-		String[] filecontent = Files.readString(workdspace.toPath()).split("\n");
 
-		// Parse the file
-		int lineCount = 1;
-		for (var line : filecontent) {
-			// token[0]: Type
-			// token[1]: filepath
+		// Apply the local workspace
+		if (verifyAppdataDir()) {
+			var local = Workspace.parseWorkspaceFile(Files.readString(workdspace.toPath()), workdspace.getAbsolutePath());
+			Workspace.apply(notepad, local);
+		}
+
+		// Load Cloud
+		// get the cloud file text
+		Util.execute(() -> {
 			try {
-				String tokens[] = line.split("\t");
+				final var client = AppSettings.client;
+				final var urlPath = URLEncoder.encode(Workspace.CloudPath, Charset.defaultCharset());
+				client.auth.login();
+				if (client.files.exists(urlPath)) {
+					var is = client.files.get(urlPath);
+					String content = new BufferedReader(
+							new InputStreamReader(is, StandardCharsets.UTF_8))
+							.lines()
+							.collect(Collectors.joining("\n"));
 
-				if (tokens[0].trim().equalsIgnoreCase("local")) {
-					notepad.openTab(new File(tokens[1].trim()));
+					Workspace cloud = Workspace.parseWorkspaceFile(content, Workspace.CloudPath);
+					Workspace.apply(notepad, cloud);
 				}
-			} catch (ArrayIndexOutOfBoundsException e) {
-				throw new IOException("An error occured while parsing workspace file at line " + line + ". " + workdspace.getAbsolutePath());
+			} catch (Exception e) {
+				Actions.assertDialog( "Unable to load Shaod Cloud workspace file", e);
 			}
-			lineCount++;
-		}
+		});
 	}
 
-	private static void saveWorkSpace() throws Exception {
-		File workdspace = getWorkspaceFileDir();
-		var tabs = notepad.getOpenTabs();
+	private static void saveWorkSpace() {
+		Util.execute(() -> {
+			File workdspace = getWorkspaceFileDir();
+			var tabs = notepad.getOpenTabs();
+			var currentTab = notepad.getSelectedTab();
 
-		// Dump workspace
-		PrintWriter writer = new PrintWriter(new FileOutputStream(workdspace));
-		for (var tab : tabs) {
-			// Save the content
-			var file = saveTab(tab);
-			writer.println("local\t" + file.getAbsolutePath());
-		}
-		writer.close();
+			// construct the file workspace
+			StringBuilder builder = new StringBuilder();
+			builder.append("date\t" + new Date().getTime()).append("\n");
+			for (var tab : tabs) {
+				// Save the content
+				var file = saveTab(tab);
+				builder.append("local\t" + file.getAbsolutePath()).append("\n");
+			}
+
+			builder.append("open\t" + notepad.getOpenTabs().indexOf(notepad.getSelectedTab())).append("\n");
+
+			// Write it locally
+			try(PrintWriter writer = new PrintWriter(new FileOutputStream(workdspace))) {
+				writer.println(builder.toString());
+				writer.close();
+			} catch (Exception e)	{
+				Actions.assertDialog(e);
+			}
+
+			// Now save it to cloud
+			if (AppSettings.getBool("sync_enabled")) {
+				ShadoCloudClient client = AppSettings.client;
+				try {
+					client.auth.login();
+
+					// Check if file exists
+					if (!client.files.exists(Workspace.CloudPath))	{
+						client.directories.newDirectory("auto/shado-notepad");
+						client.files.newFile(Workspace.CloudPath);
+					}
+					client.files.save(Workspace.CloudPath, builder.toString(), false);
+				} catch (Exception e) {
+					Actions.assertDialog(false, "Unable to sync workspace file " + e.getMessage());
+				}
+			}
+		});
 	}
 
-	private static File saveTab(NotepadTab tab) throws Exception {
+	private static File saveTab(NotepadTab tab) {
 		// Check if it is a file
-		if (tab.getFile() != null && tab.getFile().exists()) {
-			PrintWriter writer = new PrintWriter(new FileOutputStream(tab.getFile()));
+		try {
+			if (tab.getFile() != null && tab.getFile().exists()) {
+				PrintWriter writer = new PrintWriter(new FileOutputStream(tab.getFile()));
+				tab.write(writer);
+				writer.close();
+				return tab.getFile();
+			}
+
+			// Otherwise save it to temp
+			File file = new File(appDataDir, tab.getTabTitle());
+			PrintWriter writer = new PrintWriter(new FileOutputStream(file));
 			tab.write(writer);
 			writer.close();
-			return tab.getFile();
-		}
+			return file;
+		} catch (Exception e)	{
+			Actions.assertDialog(e);
 
-		// Otherwise save it to temp
-		File file = new File(appDataDir, tab.getTabTitle());
-		PrintWriter writer = new PrintWriter(new FileOutputStream(file));
-		tab.write(writer);
-		writer.close();
-		return file;
+		}
+		return null;
 	}
 
 	public static void assertDialog(String customMessage, Exception ex) {

@@ -3,6 +3,7 @@ package com.utils;
 import com.google.gson.*;
 import com.google.gson.annotations.*;
 import com.observer.Observable;
+import com.shadocloud.nest.*;
 
 import javax.swing.*;
 import java.io.*;
@@ -14,6 +15,7 @@ public class AppSettings extends Observable<AppSettings> {
 
 	private static AppSettings instance = new AppSettings();
 	private static final Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+	protected static ShadoCloudClient client = null;
 
 	@Expose
 	private Map<String, String> data = new HashMap<>();
@@ -96,6 +98,20 @@ public class AppSettings extends Observable<AppSettings> {
 
 		String raw = Files.readString(file.toPath());
 		instance = gson.fromJson(raw, instance.getClass());
+
+		// Check if email and password are defined
+		var email = get("shado_cloud_email");
+		var pass = get("shado_cloud_pass");
+		if (!email.isEmpty() && !pass.isEmpty())	{
+			client = new ShadoCloudClient(email, pass);
+			Util.execute(() -> {
+				try {
+					client.auth.login();
+				} catch (Exception e) {
+					Actions.assertDialog(e);
+				}
+			});
+		}
 	}
 
 	public static String getDate(String pattern) {
