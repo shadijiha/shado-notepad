@@ -1,4 +1,4 @@
-package com.editor;
+package com.swing_ext;
 
 import com.utils.*;
 
@@ -14,7 +14,7 @@ public class FileChooser {
 	private final JFileChooser chooser;
 
 	public FileChooser(String description, String... extensions) {
-		if (lastDir == null)	{
+		if (lastDir == null) {
 			String chooser_dir = AppSettings.get("chooser_dir");
 			var file = new File(chooser_dir);
 			lastDir = chooser_dir.isEmpty() || !file.exists() ? null : file;
@@ -22,14 +22,14 @@ public class FileChooser {
 
 		chooser = new JFileChooser(lastDir);
 
-		if (extensions != null && extensions.length > 0){
+		if (extensions != null && extensions.length > 0) {
 			FileNameExtensionFilter filter = new FileNameExtensionFilter(description,
 					extensions);
 			chooser.setFileFilter(filter);
 		}
 	}
 
-	public void dirOnly()	{
+	public void dirOnly() {
 		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 	}
 

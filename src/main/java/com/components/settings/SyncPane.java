@@ -1,4 +1,4 @@
-package com.editor;
+package com.components.settings;
 
 import javax.swing.*;
 
@@ -8,7 +8,7 @@ public class SyncPane {
 	private JCheckBox syncCheckbox;
 	private JPanel panel;
 
-	public JPanel getPanel()	{
+	public JPanel getPanel() {
 		return panel;
 	}
 

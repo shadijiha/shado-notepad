@@ -1,4 +1,4 @@
-package com.editor;
+package com.components.settings;
 
 import javax.swing.*;
 

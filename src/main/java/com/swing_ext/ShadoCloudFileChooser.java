@@ -1,11 +1,10 @@
-package com.editor;
+package com.swing_ext;
 
 import com.shadocloud.nest.*;
 
 import javax.swing.*;
 import javax.swing.filechooser.*;
 import java.io.*;
-import java.util.*;
 
 public class ShadoCloudFileChooser {
 

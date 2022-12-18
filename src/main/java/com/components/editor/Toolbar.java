@@ -1,7 +1,8 @@
-package com.editor;
+package com.components.editor;
 
 import com.*;
 import com.filters.*;
+import com.swing_ext.*;
 import com.utils.*;
 
 import javax.swing.*;

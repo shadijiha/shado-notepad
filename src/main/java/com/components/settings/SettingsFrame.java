@@ -1,11 +1,10 @@
-package com;
+package com.components.settings;
 
-import com.editor.*;
 import com.filters.*;
+import com.swing_ext.*;
 import com.utils.*;
 
 import javax.swing.*;
-import javax.swing.filechooser.*;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;

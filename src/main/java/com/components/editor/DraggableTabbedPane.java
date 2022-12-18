@@ -1,4 +1,4 @@
-package com;
+package com.components.editor;
 
 import javax.swing.*;
 import java.awt.*;

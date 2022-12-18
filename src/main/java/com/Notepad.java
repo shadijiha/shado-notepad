@@ -2,12 +2,12 @@ package com;
 
 // Import the necessary classes
 
+import com.components.*;
+import com.components.editor.*;
 import com.formdev.flatlaf.*;
-import com.shadocloud.nest.*;
 import com.utils.*;
 
 import javax.swing.*;
-import javax.swing.filechooser.*;
 import java.awt.*;
 import java.io.*;
 import java.nio.file.*;
@@ -87,8 +87,6 @@ public class Notepad {
 		openTabs.add(tab);
 
 		setSelectedTab(tabs.getTabCount() - 1);
-
-		AppSettings.instance().addObserver(tab);
 	}
 
 	public void openTab(String name, String text) {
@@ -137,7 +135,13 @@ public class Notepad {
 		return getOpenTabs().get(tabs.getSelectedIndex());
 	}
 
-	public void setSelectedTab(int index)	{
+	public void setSelectedTab(int index) {
 		tabs.setSelectedIndex(index);
+	}
+
+	public void close(NotepadTab selectedTab) {
+		int i = openTabs.indexOf(selectedTab);
+		openTabs.remove(i);
+		tabs.remove(i);
 	}
 }

@@ -1,5 +1,6 @@
-package com;
+package com.components.editor;
 
+import com.*;
 import com.utils.*;
 
 import javax.swing.*;
@@ -9,12 +10,12 @@ import java.io.*;
 import java.util.List;
 
 public class NotepadTabContextMenu extends JPopupMenu {
-	public NotepadTabContextMenu(JTabbedPane tabsPane, List<NotepadTab> tabs) {
+	public NotepadTabContextMenu(Notepad notepad, NotepadTab selectedTab, List<NotepadTab> tabs) {
 		var anItem = new JMenuItem("Show in explorer");
 		anItem.addActionListener(e -> {
 			try {
 				Desktop desktop = Desktop.getDesktop();
-				desktop.open(tabs.get(tabsPane.getSelectedIndex()).getFile().getParentFile());
+				desktop.open(selectedTab.getFile().getParentFile());
 			} catch (IOException ex) {
 				Actions.assertDialog(false, ex.getMessage());
 			}
@@ -23,9 +24,7 @@ public class NotepadTabContextMenu extends JPopupMenu {
 
 		var close = new JMenuItem("Close");
 		close.addActionListener(e -> {
-			int i = tabsPane.getSelectedIndex();
-			tabsPane.remove(i);
-			tabs.remove(i);
+			notepad.close(selectedTab);
 		});
 		add(close);
 	}
@@ -49,7 +48,7 @@ public class NotepadTabContextMenu extends JPopupMenu {
 		}
 
 		private void doPop(MouseEvent e) {
-			NotepadTabContextMenu menu = new NotepadTabContextMenu(notepad.tabs, notepad.getOpenTabs());
+			NotepadTabContextMenu menu = new NotepadTabContextMenu(notepad, notepad.getSelectedTab(), notepad.getOpenTabs());
 			menu.show(e.getComponent(), e.getX(), e.getY());
 		}
 	}

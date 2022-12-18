@@ -1,17 +1,17 @@
 package com;
 
-import com.editor.*;
-import com.observer.*;
+import com.components.editor.*;
+import com.swing_ext.*;
 import com.utils.*;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 
-public class NotepadTab extends JPanel implements Observer<AppSettings> {
+public class NotepadTab extends JPanel {
 	private String title;
 	private File file;
-	private final RichHTMLEditor markdownPane;
+	private final AbstractEditor markdownPane;
 
 	public NotepadTab(String name, String text, Notepad notepad, File file) {
 		super(new BorderLayout());
@@ -19,7 +19,8 @@ public class NotepadTab extends JPanel implements Observer<AppSettings> {
 		title = name;
 		setBackground(Color.WHITE);
 
-		markdownPane = new RichHTMLEditor(notepad, this, text);
+		markdownPane = AbstractEditor.factory(notepad, this, text, file);
+		AppSettings.instance().addObserver(markdownPane);
 
 		this.add(new JScrollPane(markdownPane), BorderLayout.CENTER);
 
@@ -59,11 +60,5 @@ public class NotepadTab extends JPanel implements Observer<AppSettings> {
 		} catch (Exception e) {
 			Actions.assertDialog(false, e.getMessage());
 		}
-	}
-
-	@Override
-	public void update(AppSettings data) {
-		if (AppSettings.hasChanged("font_family") || AppSettings.hasChanged("font_size"))
-			markdownPane.setFont(new Font(AppSettings.get("font_family"), Font.PLAIN, (int) AppSettings.getNum("font_size")));
 	}
 }

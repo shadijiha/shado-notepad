@@ -1,6 +1,6 @@
 package com.filters;
 
-import com.editor.*;
+import com.components.editor.*;
 
 import javax.swing.text.*;
 

@@ -1,4 +1,4 @@
-package com.editor;
+package com.components.editor;
 
 import com.*;
 import com.filters.*;
@@ -8,22 +8,23 @@ import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
-import java.awt.datatransfer.*;
-import java.awt.dnd.*;
 import java.awt.image.*;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
-public class RichHTMLEditor extends JTextPane {
-	private Notepad notepad;
-	private Map<Integer, ImageMetadata> imagesMetadata = new HashMap<>();
+public class RichHTMLEditor extends AbstractEditor {
+	private Map<Integer, ImageMetadata> imagesMetadata;
 
 	private static final String META_DATA_BEGIN = "------------___ IMG METADATA ___------------";
 
 	public RichHTMLEditor(Notepad notepad, JPanel tab, String text) {
-		super();
-		this.notepad = notepad;
+		super(notepad, tab, text);
+	}
+
+	@Override
+	protected void buildUI(String text) {
+		imagesMetadata = new HashMap<>();
 
 		setContentType("text/html");
 
@@ -42,11 +43,10 @@ public class RichHTMLEditor extends JTextPane {
 		AbstractDocument doc = (AbstractDocument) getDocument();
 		doc.setDocumentFilter(new ImageDeleteFilter(this));
 
-		setDropTarget(onDrop());
-
 		new Toolbar(notepad, tab, this);
 	}
 
+	@Override
 	public void serialize(PrintWriter writer) {
 		// Set HTML
 		writer.println(getText());
@@ -58,7 +58,9 @@ public class RichHTMLEditor extends JTextPane {
 		}
 	}
 
-	private void deserialize(String text) throws IOException {
+	@Override
+	public void deserialize(String text) throws IOException {
+
 		String[] data = text.split(META_DATA_BEGIN);
 		String html = data[0];
 
@@ -121,32 +123,15 @@ public class RichHTMLEditor extends JTextPane {
 		insertIcon(icon, false, null, pos, width, height);
 	}
 
+	/**
+	 * Helper functions
+	 */
+
 	private void imageInserted(int caret, File file, int width, int height) throws IOException {
 		byte[] fileContent = Files.readAllBytes(file.toPath());
 		String encodedString = Base64.getEncoder().encodeToString(fileContent);
 
-		//Actions.assertDialog(b, "Unable to convert image (" + getImageExtension(file) + ") to base64!");
 		imagesMetadata.put(caret, new ImageMetadata(encodedString, width, height));
-
-		System.out.println(imagesMetadata.keySet());
-	}
-
-	private DropTarget onDrop() {
-		return new DropTarget() {
-			public synchronized void drop(DropTargetDropEvent evt) {
-				try {
-					evt.acceptDrop(DnDConstants.ACTION_COPY);
-					java.util.List<File> droppedFiles = (java.util.List<File>)
-							evt.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
-					for (File file : droppedFiles) {
-						// process files
-						notepad.openTab(file);
-					}
-				} catch (Exception ex) {
-					Actions.assertDialog(false, ex.getMessage());
-				}
-			}
-		};
 	}
 
 	private Image base64toImage(String base64) throws IOException {
@@ -189,17 +174,6 @@ public class RichHTMLEditor extends JTextPane {
 
 		// Return the buffered image
 		return bimage;
-	}
-
-	private static String getImageExtension(File file) {
-		// convert the file name into string
-		String fileName = file.toString();
-
-		int index = fileName.lastIndexOf('.');
-		if (index > 0) {
-			return fileName.substring(index + 1);
-		}
-		return "png";
 	}
 
 	private static class ImageMetadata {
