@@ -1,9 +1,11 @@
 package com;
 
+import com.editor.*;
 import com.filters.*;
 import com.utils.*;
 
 import javax.swing.*;
+import javax.swing.filechooser.*;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -15,18 +17,19 @@ public class SettingsFrame extends JDialog {
 	public SettingsFrame(JFrame parent) {
 		this.frame = parent;
 		setTitle("Settings");
-		setAlwaysOnTop(true);
+		//setAlwaysOnTop(true);
 		setup();
 		setPreferredSize(new Dimension(500, 500));
 		pack();
 		setLocationRelativeTo(parent);
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setVisible(true);
 	}
 
 	private void setup() {
 
 		final List<SettingsTab> tabs = List.of(
+				generalTab(),
 				syncTab(),
 				themeTab()
 		);
@@ -39,6 +42,25 @@ public class SettingsFrame extends JDialog {
 
 		// Add the JTabbedPane to the JFrame
 		add(tabbedPane);
+	}
+
+	private SettingsTab generalTab() {
+		SettingsTab tab = SettingsTab.of("General");
+		var general = new GeneralPane();
+		tab.panel = general.getPanel();
+
+		general.getWorkspaceField().setText(Actions.getWorkspaceFileDir().getAbsolutePath());
+		general.getSettingsField().setText(AppSettings.getSettingsFileDir().getAbsolutePath());
+		general.getAutoSaveField().setText(Actions.getAppDataDir().getAbsolutePath());
+
+		general.getBrowseBtn().addActionListener(e -> {
+			FileChooser chooser = new FileChooser("Folder");
+			chooser.dirOnly();
+			var file = chooser.openDialog();
+			System.out.println(file);
+		});
+
+		return tab;
 	}
 
 	private SettingsTab themeTab() {
@@ -88,46 +110,38 @@ public class SettingsFrame extends JDialog {
 
 	private SettingsTab syncTab() {
 		var tab = SettingsTab.of("Sync");
-		var panel = tab.panel;
+		var syncPane = new SyncPane();
+		tab.panel = syncPane.getPanel();        // Check the designer
 
-		final String[] labels = {"Shado Cloud email", "Shado Cloud password"};
-		panel.setLayout(new GridLayout(labels.length + 1, 2, 1, 0));
+		syncPane.getShadoEmailField().setText(AppSettings.get("shado_cloud_email"));
+		syncPane.getShadoPassField().setText(AppSettings.get("shado_cloud_pass"));
 
-		JLabel empty = new JLabel();
-		JCheckBox enabled = new JCheckBox("Enabled sync");
-		enabled.setSelected(AppSettings.getBool("sync_enabled"));
-		panel.add(enabled);
-		panel.add(empty);
-		enabled.addChangeListener(e -> AppSettings.set("sync_enabled", enabled.isSelected() + ""));
+		syncPane.getShadoEmailField().addFocusListener(createFocusListener(syncPane.getShadoEmailField(), "shado_cloud_email"));
+		syncPane.getShadoPassField().addFocusListener(createFocusListener(syncPane.getShadoPassField(), "shado_cloud_pass"));
 
-		for (int i = 0; i < labels.length; i++) {
-			final JLabel l = new JLabel(labels[i], JLabel.TRAILING);
-			l.setHorizontalAlignment(JLabel.LEFT);
-			panel.add(l);
-
-			final JTextField textField = new JTextField();
-			textField.setText(AppSettings.get(labels[i]));
-			l.setLabelFor(textField);
-
-			final int finalI = i;
-			textField.addFocusListener(new FocusListener() {
-
-				public void focusGained(FocusEvent e) {
-				}
-
-				public void focusLost(FocusEvent e) {
-					// Check if it has changed
-					boolean hasChanged = !AppSettings.get(labels[finalI]).equals(textField.getText());
-					if (hasChanged) {
-						AppSettings.set(labels[finalI], textField.getText());
-					}
-				}
-			});
-
-			panel.add(textField);
-		}
+		syncPane.getSyncCheckbox().setSelected(AppSettings.getBool("sync_enabled"));
+		syncPane.getSyncCheckbox().addChangeListener(e ->
+				AppSettings.set("sync_enabled", syncPane.getSyncCheckbox().isSelected() + ""));
 
 		return tab;
+	}
+
+	private FocusListener createFocusListener(JTextField field, String app_settings_label) {
+		return new FocusListener() {
+			@Override
+			public void focusGained(FocusEvent e) {
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				// Check if it has changed
+				boolean hasChanged = !AppSettings.get(app_settings_label).equals(field.getText());
+				if (hasChanged) {
+					System.out.println(field.getText());
+					AppSettings.set(app_settings_label, field.getText());
+				}
+			}
+		};
 	}
 
 	/**
@@ -135,7 +149,7 @@ public class SettingsFrame extends JDialog {
 	 */
 	private static class SettingsTab {
 		public final String label;
-		public final JPanel panel;
+		public JPanel panel;
 
 
 		private SettingsTab(String label, JPanel panel) {

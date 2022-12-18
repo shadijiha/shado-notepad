@@ -60,6 +60,10 @@ public abstract class Actions {
 		return notepad;
 	}
 
+	public static File getWorkspaceFileDir()	{
+		return new File(appDataDir, "workspace.txt");
+	}
+
 	/**
 	 * Helper functions
 	 */
@@ -73,11 +77,11 @@ public abstract class Actions {
 			if (!b) return false;
 		}
 
-		return new File(appDataDir, "workspace.txt").exists();
+		return getWorkspaceFileDir().exists();
 	}
 
 	private static void loadWorkSpace() throws IOException {
-		File workdspace = new File(appDataDir, "workspace.txt");
+		File workdspace = getWorkspaceFileDir();
 		String[] filecontent = Files.readString(workdspace.toPath()).split("\n");
 
 		// Parse the file
@@ -99,7 +103,7 @@ public abstract class Actions {
 	}
 
 	private static void saveWorkSpace() throws Exception {
-		File workdspace = new File(appDataDir, "workspace.txt");
+		File workdspace = getWorkspaceFileDir();
 		var tabs = notepad.getOpenTabs();
 
 		// Dump workspace

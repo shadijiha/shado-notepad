@@ -21,9 +21,15 @@ public class FileChooser {
 
 		chooser = new JFileChooser(lastDir);
 
-		FileNameExtensionFilter filter = new FileNameExtensionFilter(description,
-				extensions);
-		chooser.setFileFilter(filter);
+		if (extensions != null && extensions.length > 0){
+			FileNameExtensionFilter filter = new FileNameExtensionFilter(description,
+					extensions);
+			chooser.setFileFilter(filter);
+		}
+	}
+
+	public void dirOnly()	{
+		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 	}
 
 	public File openDialog() {

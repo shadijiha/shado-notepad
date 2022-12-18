@@ -78,7 +78,7 @@ public class AppSettings extends Observable<AppSettings> {
 
 				String json = gson.toJson(instance, instance.getClass());
 
-				File file = new File(Actions.getAppDataDir(), "settings.json");
+				File file = getSettingsFileDir();
 				try (PrintWriter writer = new PrintWriter(new FileOutputStream(file))) {
 					writer.println(json);
 					writer.close();
@@ -90,7 +90,7 @@ public class AppSettings extends Observable<AppSettings> {
 	}
 
 	public static void deserialize() throws IOException {
-		File file = new File(Actions.getAppDataDir(), "settings.json");
+		File file = getSettingsFileDir();
 		if (!file.exists())
 			return;
 
@@ -115,6 +115,10 @@ public class AppSettings extends Observable<AppSettings> {
 
 	public static String getDate() {
 		return getDate("MM-dd-yyyy HH-mm-ss");
+	}
+
+	public static File getSettingsFileDir()	{
+		return new File(Actions.getAppDataDir(), "settings.json");
 	}
 
 	/**

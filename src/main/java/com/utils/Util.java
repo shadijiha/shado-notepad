@@ -7,7 +7,7 @@ public abstract class Util {
 	private static final Util instance = new Util() {
 	};
 
-	private ExecutorService executors = Executors.newFixedThreadPool(
+	private final ExecutorService executors = Executors.newFixedThreadPool(
 			Math.max(Runtime.getRuntime().availableProcessors() / 2, 2)
 	);
 
