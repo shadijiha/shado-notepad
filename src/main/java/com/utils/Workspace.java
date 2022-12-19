@@ -11,14 +11,16 @@ public class Workspace {
 	protected Date date;
 	protected int openTabIndex;
 
-	private static Date lastApplied = null;
+	private static Workspace lastApplied = null;
 	public static File LocalPath = null;
-	public static final String CloudPath = "auto/shado-notepad/workspace.txt";
+	public static final String CloudPath = "auto/shado-notepad/";
+	public static final String CloudPathFile = CloudPath + "workspace.txt";
+
 
 	protected Workspace() {
 	}
 
-	public static final Workspace parseWorkspaceFile(String rawContent, String filepath) throws Exception	{
+	public static final Workspace parseWorkspaceFile(String rawContent, String filepath) throws Exception {
 		String[] filecontent = rawContent.split("\n");
 
 		Workspace workspace = new Workspace();
@@ -34,11 +36,9 @@ public class Workspace {
 				var cmd = tokens[0].trim();
 				if (cmd.equalsIgnoreCase("local")) {
 					workspace.tabs.add(new WorkspaceTab(tokens[1].trim(), WorkspaceTab.Type.Local));
-				}
-				else if (cmd.equalsIgnoreCase("open"))	{
+				} else if (cmd.equalsIgnoreCase("open")) {
 					workspace.openTabIndex = Integer.parseInt(tokens[1].trim());
-				}
-				else if (cmd.equalsIgnoreCase("date"))	{
+				} else if (cmd.equalsIgnoreCase("date")) {
 					long time = Long.parseLong(tokens[1].trim());
 					workspace.date = new Date(time);
 				}
@@ -51,26 +51,43 @@ public class Workspace {
 		return workspace;
 	}
 
-	public static final void apply(Notepad notepad, Workspace workspace)	{
+	public static final boolean apply(Notepad notepad, Workspace workspace) {
 		// If the last Applied is newer than the current one,
 		// then don't apply it
 		// ALso if it is the same date don't apply (means that it has been synced before)
-		if (lastApplied != null && (lastApplied.after(workspace.date) || lastApplied.equals(workspace.date))) {
-			System.out.println("Did not apply " + workspace.date);
-			return;
+		if (lastApplied != null && (lastApplied.date.after(workspace.date) || lastApplied.date.equals(workspace.date))) {
+			return false;
 		}
 
-		for (var tab : workspace.tabs)	{
+		for (var tab : workspace.tabs) {
 			if (tab.type == WorkspaceTab.Type.Local)
 				notepad.openTab(new File(tab.path));
 		}
 
 		notepad.setSelectedTab(workspace.openTabIndex);
-		lastApplied = workspace.date;
+		lastApplied = workspace;
+
+		return true;
 	}
 
+	public static Workspace getCurrentWorkspace() {
+		return lastApplied;
+	}
 
-	private static final class WorkspaceTab	{
+	public boolean containsLocal(String filename) {
+		return getLocalPathFromName(filename) != null;
+	}
+
+	public File getLocalPathFromName(String filename) {
+		for (var tab : tabs) {
+			var file = new File(tab.path);
+			if (tab.type == WorkspaceTab.Type.Local && file.getName().equals(filename))
+				return file;
+		}
+		return null;
+	}
+
+	static final class WorkspaceTab {
 		public final String path;
 		public final Type type;
 
@@ -79,7 +96,11 @@ public class Workspace {
 			this.type = type;
 		}
 
-		enum Type	{
+		public String getName() {
+			return new File(path).getName();
+		}
+
+		enum Type {
 			Local, Cloud
 		}
 	}

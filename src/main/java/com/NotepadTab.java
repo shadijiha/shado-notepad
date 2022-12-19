@@ -11,7 +11,8 @@ import java.io.*;
 public class NotepadTab extends JPanel {
 	private String title;
 	private File file;
-	private final AbstractEditor markdownPane;
+	private AbstractEditor markdownPane;
+	private final JScrollPane scrollPane;
 
 	public NotepadTab(String name, String text, Notepad notepad, File file) {
 		super(new BorderLayout());
@@ -22,7 +23,8 @@ public class NotepadTab extends JPanel {
 		markdownPane = AbstractEditor.factory(notepad, this, text, file);
 		AppSettings.instance().addObserver(markdownPane);
 
-		this.add(new JScrollPane(markdownPane), BorderLayout.CENTER);
+		scrollPane = new JScrollPane(markdownPane);
+		this.add(scrollPane, BorderLayout.CENTER);
 
 		// Add the text editor to a new tab in the JTabbedPane
 		notepad.tabs.addTab(name, this);
@@ -64,5 +66,24 @@ public class NotepadTab extends JPanel {
 
 	public void setFile(File file) {
 		this.file = file;
+	}
+
+	/**
+	 * If it is a file, then returns the name of the file. Otherwise, return the title
+	 *
+	 * @return
+	 */
+	public String getFileName() {
+		if (file != null)
+			return file.getName();
+		return title;
+	}
+
+	public void refresh(String cloudContent) {
+		AppSettings.instance().removeObserver(markdownPane);
+		markdownPane = AbstractEditor.factory(Actions.getAppInstance(), this, cloudContent, file);
+		AppSettings.instance().addObserver(markdownPane);
+
+		scrollPane.setViewportView(markdownPane);
 	}
 }

@@ -113,25 +113,44 @@ public abstract class Actions {
 
 		// Load Cloud
 		// get the cloud file text
-		Util.execute(() -> {
-			try {
-				final var client = AppSettings.client;
-				final var urlPath = URLEncoder.encode(Workspace.CloudPath, Charset.defaultCharset());
-				client.auth.login();
-				if (client.files.exists(urlPath)) {
-					var is = client.files.get(urlPath);
-					String content = new BufferedReader(
-							new InputStreamReader(is, StandardCharsets.UTF_8))
-							.lines()
-							.collect(Collectors.joining("\n"));
+		if (AppSettings.getBool("sync_enabled")) {
+			Util.execute(() -> {
+				try {
+					final var client = AppSettings.client;
+					final var urlPath = encode(Workspace.CloudPathFile);
+					client.auth.login();
+					if (client.files.exists(urlPath)) {
+						var is = client.files.get(urlPath);
+						String content = new BufferedReader(
+								new InputStreamReader(is, StandardCharsets.UTF_8))
+								.lines()
+								.collect(Collectors.joining("\n"));
 
-					Workspace cloud = Workspace.parseWorkspaceFile(content, Workspace.CloudPath);
-					Workspace.apply(notepad, cloud);
+						Workspace cloud = Workspace.parseWorkspaceFile(content, Workspace.CloudPathFile);
+						boolean hasApplied = Workspace.apply(notepad, cloud);
+
+						// If workspace was synced, then sync the files too
+						// Get all files in cloud notepad dir
+						var cloudFiles = client.directories.list(encode("auto/shado-notepad"));
+						for (var file : cloudFiles) {
+							//Actions.appDataDir
+							// Only open the cloud file if it is open in the local workspace?
+							if (Workspace.getCurrentWorkspace().containsLocal(file.name)) {
+								var input = client.files.get(encode(Workspace.CloudPath + file.name));
+								String rawContent = new BufferedReader(
+										new InputStreamReader(input, StandardCharsets.UTF_8))
+										.lines()
+										.collect(Collectors.joining("\n"));
+
+								notepad.openTab("[Cloud] " + file.name, rawContent, null);
+							}
+						}
+					}
+				} catch (Exception e) {
+					Actions.assertDialog("Unable to load Shado Cloud workspace file", e);
 				}
-			} catch (Exception e) {
-				Actions.assertDialog("Unable to load Shaod Cloud workspace file", e);
-			}
-		});
+			});
+		}
 	}
 
 	private static void saveWorkSpace() {
@@ -174,18 +193,23 @@ public abstract class Actions {
 					// Check if file exists
 					// Then upload the workspace file
 					//dialog.update(1, totalTasks, "Creating workspace file...");
-					if (!client.files.exists(Workspace.CloudPath)) {
-						client.directories.newDirectory("auto/shado-notepad");
-						client.files.newFile(Workspace.CloudPath);
+					if (!client.files.exists(Workspace.CloudPathFile)) {
+						client.directories.newDirectory(Workspace.CloudPath);
+						client.files.newFile(Workspace.CloudPathFile);
 					}
-					client.files.save(Workspace.CloudPath, builder.toString(), false);
+					client.files.save(Workspace.CloudPathFile, builder.toString(), false);
 
 					// Upload opened files to cloud
 					//dialog.update(2, totalTasks, "Uploading files...");
 					int i = 0;
 					for (var tab : notepad.getOpenTabs()) {
+
+						// TODO: For now ignore files marked with [Cloud]. Change this
+						if (tab.getTabTitle().startsWith("[Cloud]"))
+							continue;
+
 						final var file = tab.getFile();
-						final var fileName = "auto/shado-notepad/" + file.getName();
+						final var fileName = Workspace.CloudPath + file.getName();
 
 						//dialog.update(i++, totalTasks, "Uploading " + file.getName() + " ...");
 
@@ -233,5 +257,9 @@ public abstract class Actions {
 
 	public static void assertDialog(Exception e) {
 		assertDialog("", e);
+	}
+
+	private static String encode(String s) {
+		return URLEncoder.encode(s, Charset.defaultCharset());
 	}
 }
