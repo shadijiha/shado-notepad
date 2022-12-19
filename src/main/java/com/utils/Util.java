@@ -31,7 +31,7 @@ public abstract class Util {
 	public static void shutdown() {
 		try {
 			instance.executors.shutdown();
-			instance.executors.awaitTermination(2, TimeUnit.MINUTES);
+			instance.executors.awaitTermination(1, TimeUnit.MINUTES);
 		} catch (InterruptedException e) {
 			Actions.assertDialog(e);
 		}

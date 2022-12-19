@@ -1,6 +1,7 @@
 package com.utils;
 
 import com.*;
+import com.components.*;
 import com.shadocloud.nest.*;
 
 import javax.swing.*;
@@ -14,11 +15,13 @@ import java.util.stream.*;
 public abstract class Actions {
 
 	private static Notepad notepad = null;
-	static File appDataDir = new File(System.getenv("LOCALAPPDATA") + "/shado-notepad");;
+	static File appDataDir = new File(System.getenv("LOCALAPPDATA") + "/shado-notepad");
+	;
 	private static Date workspaceDate = null;
 
 	/**
 	 * CAlled on app start
+	 *
 	 * @param frame
 	 */
 	public static void setNotepadSingleton(Notepad frame) {
@@ -45,6 +48,9 @@ public abstract class Actions {
 		assert notepad != null : "You need to call setFrame at least once";
 
 		try {
+			saveWorkSpace();
+			AppSettings.serialize();
+
 			// Logout from Shado cloud
 			Util.execute(() -> {
 				try {
@@ -53,9 +59,6 @@ public abstract class Actions {
 					e.printStackTrace();
 				}
 			});
-
-			saveWorkSpace();
-			AppSettings.serialize();
 		} catch (Exception e) {
 			assertDialog(false, e.getMessage());
 		}
@@ -82,7 +85,7 @@ public abstract class Actions {
 		return notepad;
 	}
 
-	public static File getWorkspaceFileDir()	{
+	public static File getWorkspaceFileDir() {
 		return Workspace.LocalPath;
 	}
 
@@ -126,7 +129,7 @@ public abstract class Actions {
 					Workspace.apply(notepad, cloud);
 				}
 			} catch (Exception e) {
-				Actions.assertDialog( "Unable to load Shaod Cloud workspace file", e);
+				Actions.assertDialog("Unable to load Shaod Cloud workspace file", e);
 			}
 		});
 	}
@@ -149,27 +152,52 @@ public abstract class Actions {
 			builder.append("open\t" + notepad.getOpenTabs().indexOf(notepad.getSelectedTab())).append("\n");
 
 			// Write it locally
-			try(PrintWriter writer = new PrintWriter(new FileOutputStream(workdspace))) {
+			try (PrintWriter writer = new PrintWriter(new FileOutputStream(workdspace))) {
 				writer.println(builder.toString());
 				writer.close();
-			} catch (Exception e)	{
+			} catch (Exception e) {
 				Actions.assertDialog(e);
 			}
 
 			// Now save it to cloud
 			if (AppSettings.getBool("sync_enabled")) {
+				//ProgressDialog dialog = new ProgressDialog();
+
+				final int totalTasks = notepad.getOpenTabs().size() + 1 + 1;
+
 				ShadoCloudClient client = AppSettings.client;
 				try {
+					//dialog.update(0, totalTasks, "Logging in to " + AppSettings.get("shado_cloud_email") + " 's Shado cloud account...");
 					client.auth.login();
 
+
 					// Check if file exists
-					if (!client.files.exists(Workspace.CloudPath))	{
+					// Then upload the workspace file
+					//dialog.update(1, totalTasks, "Creating workspace file...");
+					if (!client.files.exists(Workspace.CloudPath)) {
 						client.directories.newDirectory("auto/shado-notepad");
 						client.files.newFile(Workspace.CloudPath);
 					}
 					client.files.save(Workspace.CloudPath, builder.toString(), false);
+
+					// Upload opened files to cloud
+					//dialog.update(2, totalTasks, "Uploading files...");
+					int i = 0;
+					for (var tab : notepad.getOpenTabs()) {
+						final var file = tab.getFile();
+						final var fileName = "auto/shado-notepad/" + file.getName();
+
+						//dialog.update(i++, totalTasks, "Uploading " + file.getName() + " ...");
+
+						if (!client.files.exists(fileName))
+							client.files.newFile(fileName);
+						client.files.save(fileName, Files.readString(file.toPath()), false);
+					}
+
 				} catch (Exception e) {
 					Actions.assertDialog(false, "Unable to sync workspace file " + e.getMessage());
+				} finally {
+					//dialog.dispose();
 				}
 			}
 		});
@@ -189,9 +217,10 @@ public abstract class Actions {
 			File file = new File(appDataDir, tab.getTabTitle());
 			PrintWriter writer = new PrintWriter(new FileOutputStream(file));
 			tab.write(writer);
+			tab.setFile(file);
 			writer.close();
 			return file;
-		} catch (Exception e)	{
+		} catch (Exception e) {
 			Actions.assertDialog(e);
 
 		}

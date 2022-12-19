@@ -61,4 +61,8 @@ public class NotepadTab extends JPanel {
 			Actions.assertDialog(false, e.getMessage());
 		}
 	}
+
+	public void setFile(File file) {
+		this.file = file;
+	}
 }
