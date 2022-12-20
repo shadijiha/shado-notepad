@@ -20,7 +20,7 @@ public class Workspace {
 	protected Workspace() {
 	}
 
-	public static final Workspace parseWorkspaceFile(String rawContent, String filepath) throws Exception {
+	public static Workspace parseWorkspaceFile(String rawContent, String filepath) throws Exception {
 		String[] filecontent = rawContent.split("\n");
 
 		Workspace workspace = new Workspace();
@@ -51,7 +51,7 @@ public class Workspace {
 		return workspace;
 	}
 
-	public static final boolean apply(Notepad notepad, Workspace workspace) {
+	public static boolean apply(Notepad notepad, Workspace workspace) {
 		// If the last Applied is newer than the current one,
 		// then don't apply it
 		// ALso if it is the same date don't apply (means that it has been synced before)
@@ -59,10 +59,13 @@ public class Workspace {
 			return false;
 		}
 
-		for (var tab : workspace.tabs) {
-			if (tab.type == WorkspaceTab.Type.Local)
-				notepad.openTab(new File(tab.path));
-		}
+		notepad.mergeTabs(
+				workspace.tabs.stream()
+						.filter(tab -> tab.type == WorkspaceTab.Type.Local)
+						.map(tab -> new File(tab.path))
+						.filter(File::exists)
+						.toList()
+		);
 
 		notepad.setSelectedTab(workspace.openTabIndex);
 		lastApplied = workspace;
@@ -70,21 +73,20 @@ public class Workspace {
 		return true;
 	}
 
+	public static boolean isNewer(Workspace workspace1, Workspace workspace2) {
+		assert workspace1 != null;
+		assert workspace2 != null;
+		return (workspace1.date.after(workspace2.date) || workspace1.date.equals(workspace2.date));
+	}
+
 	public static Workspace getCurrentWorkspace() {
 		return lastApplied;
 	}
 
 	public boolean contains(String filename) {
-		return getLocalPathFromName(filename) != null;
-	}
-
-	public File getLocalPathFromName(String filename) {
-		for (var tab : tabs) {
-			var file = new File(tab.path);
-			if (tab.type == WorkspaceTab.Type.Local && file.getName().equals(filename))
-				return file;
-		}
-		return null;
+		return tabs.stream()
+				.map(tab -> new File(tab.path).getName())
+				.anyMatch(name -> name.equals(filename));
 	}
 
 	static final class WorkspaceTab {

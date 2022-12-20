@@ -41,6 +41,14 @@ public class NotepadTab extends JPanel {
 		return file;
 	}
 
+	public String getContent() {
+		StringWriter writer = new StringWriter();
+		PrintWriter out = new PrintWriter(writer);
+		markdownPane.serialize(out);
+		out.close();
+		return writer.toString();
+	}
+
 	public void write(PrintWriter stream) throws Exception {
 		markdownPane.serialize(stream);
 	}
@@ -89,13 +97,5 @@ public class NotepadTab extends JPanel {
 		if (file != null)
 			return file.getName();
 		return title;
-	}
-
-	public void refresh(String cloudContent) {
-		AppSettings.instance().removeObserver(markdownPane);
-		markdownPane = AbstractEditor.factory(Actions.getAppInstance(), this, cloudContent, file);
-		AppSettings.instance().addObserver(markdownPane);
-
-		scrollPane.setViewportView(markdownPane);
 	}
 }

@@ -136,12 +136,32 @@ public class Notepad {
 	}
 
 	public void setSelectedTab(int index) {
-		tabs.setSelectedIndex(index);
+		try {
+			tabs.setSelectedIndex(index);
+		} catch (Exception e) {
+		}
 	}
 
 	public void close(NotepadTab selectedTab) {
 		int i = openTabs.indexOf(selectedTab);
-		openTabs.remove(i);
-		tabs.remove(i);
+
+		try {
+			openTabs.remove(i);
+			tabs.remove(i);
+		} catch (Exception e) {
+
+		}
+	}
+
+	public void mergeTabs(List<File> incoming) {
+		final var temp = openTabs.stream().map(NotepadTab::getTabTitle).toList();
+		for (var file : incoming) {
+			if (temp.contains(file.getName())) {
+				int i = temp.indexOf(file.getName());
+				close(openTabs.get(i));
+				openTab(file);
+			} else
+				openTab(file);
+		}
 	}
 }

@@ -1,12 +1,10 @@
 package com.utils;
 
 import com.*;
-import com.components.*;
 import com.shadocloud.nest.*;
 
 import javax.swing.*;
 import java.io.*;
-import java.net.*;
 import java.nio.charset.*;
 import java.nio.file.*;
 import java.util.*;
@@ -40,7 +38,7 @@ public abstract class Actions {
 
 			AppSettings.instance().addObserver(new ShadoCloudFieldsObserver());
 		} catch (Exception e) {
-			assertDialog(false, e.getMessage());
+			assertDialog(e);
 		}
 	}
 
@@ -106,10 +104,11 @@ public abstract class Actions {
 		File workdspace = getWorkspaceFileDir();
 
 		// Apply the local workspace
-		if (verifyAppdataDir()) {
-			var local = Workspace.parseWorkspaceFile(Files.readString(workdspace.toPath()), workdspace.getAbsolutePath());
-			Workspace.apply(notepad, local);
-		}
+		//if (verifyAppdataDir()) {
+		final var local = Workspace.parseWorkspaceFile(
+				Files.readString(workdspace.toPath()), workdspace.getAbsolutePath());
+		Workspace.apply(notepad, local);
+		//}
 
 		// Load Cloud
 		// get the cloud file text
@@ -117,8 +116,9 @@ public abstract class Actions {
 			Util.execute(() -> {
 				try {
 					final var client = AppSettings.client;
-					final var urlPath = encode(Workspace.CloudPathFile);
+					final var urlPath = Workspace.CloudPathFile;
 					client.auth.login();
+
 					if (client.files.exists(urlPath)) {
 						var is = client.files.get(urlPath);
 						String content = new BufferedReader(
@@ -127,26 +127,39 @@ public abstract class Actions {
 								.collect(Collectors.joining("\n"));
 
 						Workspace cloud = Workspace.parseWorkspaceFile(content, Workspace.CloudPathFile);
-						boolean hasApplied = Workspace.apply(notepad, cloud);
+						if (!Workspace.isNewer(cloud, local))
+							return;
 
 						// If workspace was synced, then sync the files too
 						// Get all files in cloud notepad dir
-						var cloudFiles = client.directories.list(encode("auto/shado-notepad"));
-						for (var file : cloudFiles) {
-							//Actions.appDataDir
-							// Only open the cloud file if it is open in the local workspace?
-							if (Workspace.getCurrentWorkspace().contains(file.name)) {
-								var input = client.files.get(encode(Workspace.CloudPath + file.name));
-								String rawContent = new BufferedReader(
-										new InputStreamReader(input, StandardCharsets.UTF_8))
-										.lines()
-										.collect(Collectors.joining("\n"));
+						var cloudFiles = client.directories.list("auto/shado-notepad");
 
-								// Save it locally
-								notepad.openTab(file.name, rawContent, new File(Actions.appDataDir, file.name));
-								notepad.save();
-							}
-						}
+						var tabsToMerge = Arrays.stream(cloudFiles)
+								.filter(fileInfo -> cloud.contains(fileInfo.name))
+								.map(file -> {
+									try {
+										var input = client.files.get(Workspace.CloudPath + file.name);
+										String rawContent = new BufferedReader(
+												new InputStreamReader(input, StandardCharsets.UTF_8))
+												.lines()
+												.collect(Collectors.joining("\n"));
+
+										// Save it locally
+										File saved = new File(Actions.appDataDir, file.name);
+										PrintWriter writer = new PrintWriter(new FileOutputStream(saved));
+										writer.println(rawContent);
+										writer.close();
+
+										return saved;
+									} catch (Exception e) {
+										Actions.assertDialog(e);
+									}
+									return null;
+								})
+								.filter(Objects::nonNull)
+								.toList();
+
+						notepad.mergeTabs(tabsToMerge);
 					}
 				} catch (Exception e) {
 					Actions.assertDialog("Unable to load Shado Cloud workspace file", e);
@@ -198,24 +211,25 @@ public abstract class Actions {
 					}
 					client.files.save(Workspace.CloudPathFile, builder.toString(), false);
 
-					// Upload opened files to cloud
-					int i = 0;
+					// Save it to AppData then
+					// Upload it files to cloud
 					for (var tab : notepad.getOpenTabs()) {
+						File file = new File(appDataDir, tab.getFileName());
+						PrintWriter writer = new PrintWriter(new FileOutputStream(file));
+						tab.write(writer);
+						writer.close();
 
-						// TODO: For now ignore files marked with [Cloud]. Change this
-						if (tab.isSynced())
-							continue;
+						// Then upload the file to cloud
+						var destName = Workspace.CloudPath + tab.getFileName();
+						if (client.files.exists(destName))
+							client.files.delete(destName);
 
-						final var file = tab.getFile();
-						final var fileName = Workspace.CloudPath + file.getName();
-
-						if (!client.files.exists(fileName))
-							client.files.newFile(fileName);
-						client.files.save(fileName, Files.readString(file.toPath()), false);
+						client.files.newFile(destName);
+						client.files.save(destName, tab.getContent(), false);
 					}
 
 				} catch (Exception e) {
-					Actions.assertDialog(false, "Unable to sync workspace file " + e.getMessage());
+					Actions.assertDialog("Unable to sync workspace file ", e);
 				}
 			}
 		});
@@ -247,13 +261,10 @@ public abstract class Actions {
 
 	public static void assertDialog(String customMessage, Exception ex) {
 		Actions.assertDialog(false, customMessage + "\n" + ex.getMessage());
+		throw new RuntimeException(ex);
 	}
 
 	public static void assertDialog(Exception e) {
 		assertDialog("", e);
-	}
-
-	private static String encode(String s) {
-		return URLEncoder.encode(s, Charset.defaultCharset());
 	}
 }
