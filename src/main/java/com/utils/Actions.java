@@ -135,14 +135,16 @@ public abstract class Actions {
 						for (var file : cloudFiles) {
 							//Actions.appDataDir
 							// Only open the cloud file if it is open in the local workspace?
-							if (Workspace.getCurrentWorkspace().containsLocal(file.name)) {
+							if (Workspace.getCurrentWorkspace().contains(file.name)) {
 								var input = client.files.get(encode(Workspace.CloudPath + file.name));
 								String rawContent = new BufferedReader(
 										new InputStreamReader(input, StandardCharsets.UTF_8))
 										.lines()
 										.collect(Collectors.joining("\n"));
 
-								notepad.openTab("[Cloud] " + file.name, rawContent, null);
+								// Save it locally
+								notepad.openTab(file.name, rawContent, new File(Actions.appDataDir, file.name));
+								notepad.save();
 							}
 						}
 					}
@@ -186,13 +188,10 @@ public abstract class Actions {
 
 				ShadoCloudClient client = AppSettings.client;
 				try {
-					//dialog.update(0, totalTasks, "Logging in to " + AppSettings.get("shado_cloud_email") + " 's Shado cloud account...");
 					client.auth.login();
-
 
 					// Check if file exists
 					// Then upload the workspace file
-					//dialog.update(1, totalTasks, "Creating workspace file...");
 					if (!client.files.exists(Workspace.CloudPathFile)) {
 						client.directories.newDirectory(Workspace.CloudPath);
 						client.files.newFile(Workspace.CloudPathFile);
@@ -200,18 +199,15 @@ public abstract class Actions {
 					client.files.save(Workspace.CloudPathFile, builder.toString(), false);
 
 					// Upload opened files to cloud
-					//dialog.update(2, totalTasks, "Uploading files...");
 					int i = 0;
 					for (var tab : notepad.getOpenTabs()) {
 
 						// TODO: For now ignore files marked with [Cloud]. Change this
-						if (tab.getTabTitle().startsWith("[Cloud]"))
+						if (tab.isSynced())
 							continue;
 
 						final var file = tab.getFile();
 						final var fileName = Workspace.CloudPath + file.getName();
-
-						//dialog.update(i++, totalTasks, "Uploading " + file.getName() + " ...");
 
 						if (!client.files.exists(fileName))
 							client.files.newFile(fileName);
@@ -220,8 +216,6 @@ public abstract class Actions {
 
 				} catch (Exception e) {
 					Actions.assertDialog(false, "Unable to sync workspace file " + e.getMessage());
-				} finally {
-					//dialog.dispose();
 				}
 			}
 		});

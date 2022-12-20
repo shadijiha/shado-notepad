@@ -13,9 +13,12 @@ public class NotepadTab extends JPanel {
 	private File file;
 	private AbstractEditor markdownPane;
 	private final JScrollPane scrollPane;
+	private boolean isSynced = false;
+	private final Notepad notepad;
 
 	public NotepadTab(String name, String text, Notepad notepad, File file) {
 		super(new BorderLayout());
+		this.notepad = notepad;
 		this.file = file;
 		title = name;
 		setBackground(Color.WHITE);
@@ -66,6 +69,15 @@ public class NotepadTab extends JPanel {
 
 	public void setFile(File file) {
 		this.file = file;
+	}
+
+	public void setIsSynced(boolean v) {
+		isSynced = v;
+		notepad.tabs.setTitleAt(notepad.getOpenTabs().indexOf(this), "[Synced] " + title);
+	}
+
+	public boolean isSynced() {
+		return isSynced;
 	}
 
 	/**

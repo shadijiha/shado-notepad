@@ -74,7 +74,7 @@ public class Workspace {
 		return lastApplied;
 	}
 
-	public boolean containsLocal(String filename) {
+	public boolean contains(String filename) {
 		return getLocalPathFromName(filename) != null;
 	}
 
