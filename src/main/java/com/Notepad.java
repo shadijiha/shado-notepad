@@ -13,6 +13,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.List;
 import java.util.*;
+import java.util.function.*;
 
 
 public class Notepad {
@@ -22,8 +23,15 @@ public class Notepad {
 	private Titlebar titleBar;
 	private JFrame frame;
 
+	private volatile Consumer<NotepadTab> progressUIUpdater;
+	private volatile int progress = 0;
+	private volatile boolean showProgress = true;
+	private volatile String currentMessage = "Test message";
+
 	public static void main(String[] args) {
-		Notepad notepad = new Notepad();
+		SwingUtilities.invokeLater(() -> {
+			Notepad notepad = new Notepad();
+		});
 	}
 
 	public Notepad() {
@@ -47,12 +55,15 @@ public class Notepad {
 		tabs = new DraggableTabbedPane();
 		// Add a ChangeListener to the JTabbedPane to detect when the user switches tabs
 		tabs.addChangeListener(e -> {
-			// Get the index of the selected tab
-			int index = tabs.getSelectedIndex();
-			// Get the component for the selected tab
-			Component component = tabs.getComponentAt(index);
-			// Update the notepad UI based on the selected tab
-			updateUI(component);
+			try {
+				// Get the index of the selected tab
+				int index = tabs.getSelectedIndex();
+				// Get the component for the selected tab
+				Component component = tabs.getComponentAt(index);
+				// Update the notepad UI based on the selected tab
+				updateUI(component);
+			} catch (Exception ex) {
+			}
 		});
 		tabs.addMouseListener(new NotepadTabContextMenu.PopClickListener(this));
 
@@ -68,6 +79,9 @@ public class Notepad {
 
 		Actions.setNotepadSingleton(this);
 
+		// This bar indicates current application status
+		progressUIUpdater = setupInfoBar(frame);
+
 		// Show the notepad window
 		frame.pack();
 		frame.setLocationRelativeTo(null);
@@ -77,7 +91,7 @@ public class Notepad {
 	public void openTab(String name, String text, File file) {
 
 		// Check if the tab is already open
-		Optional<NotepadTab> isOpen = openTabs.stream().filter(e -> e.getFile().equals(file)).findFirst();
+		Optional<NotepadTab> isOpen = openTabs.stream().filter(e -> e.getFile() != null && e.getFile().equals(file)).findFirst();
 		if (isOpen.isPresent()) {
 			tabs.setSelectedIndex(openTabs.indexOf(isOpen.get()));
 			return;
@@ -113,14 +127,12 @@ public class Notepad {
 		// Get the text editor for the selected tab
 		NotepadTab tab = (NotepadTab) component;
 
-		// Update the text editor UI
-		//textArea.setFont(new Font("Monaco", Font.PLAIN, 16));
-		//textArea.setLineWrap(true);
-		//textArea.setWrapStyleWord(true);
-
 		// Add your code here to update other UI elements of the notepad,
 		// such as menus and buttons, based on the selected tab
 		titleBar.setTitle(tab.getTabTitle() + " - Shado Notepad");
+
+		if (progressUIUpdater != null)
+			progressUIUpdater.accept(tab);
 	}
 
 	public JFrame getFrame() {
@@ -163,5 +175,92 @@ public class Notepad {
 			} else
 				openTab(file);
 		}
+	}
+
+	public Notepad setProgress(int n) {
+		progress = Math.min(n, 100);
+		showProgress();
+		try {
+			progressUIUpdater.accept(getSelectedTab());
+		} catch (Exception ex) {
+		}
+		return this;
+	}
+
+	public Notepad showProgress() {
+		showProgress = true;
+		try {
+			progressUIUpdater.accept(getSelectedTab());
+		} catch (Exception ex) {
+		}
+		return this;
+	}
+
+	public Notepad hideProgress() {
+		showProgress = false;
+		try {
+			progressUIUpdater.accept(getSelectedTab());
+		} catch (Exception ex) {
+		}
+		return this;
+	}
+
+	public Notepad setProgressMsg(String s) {
+		currentMessage = s;
+		showProgress();
+		try {
+			progressUIUpdater.accept(getSelectedTab());
+		} catch (Exception ex) {
+		}
+		return this;
+	}
+
+	/**
+	 * Setups the UI for info bar
+	 *
+	 * @param frame
+	 * @return Returns a function that should be called to update the info bar (call on Tab change event)
+	 */
+	private Consumer<NotepadTab> setupInfoBar(JFrame frame) {
+		final var file = getSelectedTab().getFile();
+
+		final JPanel panel = new JPanel(new BorderLayout());
+		panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+		final var saveStatus = new JLabel(
+				file == null ? "Unsaved file" : file.getAbsolutePath()
+		);
+
+		panel.add(saveStatus, BorderLayout.WEST);
+
+		final JPanel container = new JPanel();
+
+		final var progressBar = new JProgressBar();
+		progressBar.setVisible(true);
+		progressBar.setValue(45);
+
+		final var progressLabel = new JLabel(progressBar.getValue() + "%");
+		final var messageLabel = new JLabel(currentMessage);
+
+		container.add(messageLabel);
+		container.add(progressBar);
+		container.add(progressLabel);
+
+		panel.add(container, BorderLayout.EAST);
+
+		frame.add(panel, BorderLayout.SOUTH);
+
+		return (tab) -> {
+			final var updatedFile = tab.getFile();
+
+			saveStatus.setText(updatedFile == null ? "Unsaved file" : updatedFile.getAbsolutePath());
+			progressBar.setValue(progress);
+			progressBar.setVisible(showProgress);
+			progressLabel.setText(progressBar.getValue() + "%");
+			progressLabel.setVisible(showProgress);
+
+			messageLabel.setText(currentMessage);
+			messageLabel.setVisible(showProgress);
+		};
 	}
 }

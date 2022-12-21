@@ -1,5 +1,6 @@
 package com.utils;
 
+import javax.swing.*;
 import java.io.*;
 import java.util.concurrent.*;
 
@@ -47,4 +48,12 @@ public abstract class Util {
 		}
 		return "";
 	}
+
+	public static void progress(String msg, int currentTask, int maxTasks) {
+		Actions.getAppInstance()
+				.showProgress()
+				.setProgressMsg(msg)
+				.setProgress((int) ((float) currentTask / (float) maxTasks * 100));
+	}
+
 }

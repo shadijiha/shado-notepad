@@ -98,4 +98,5 @@ public class NotepadTab extends JPanel {
 			return file.getName();
 		return title;
 	}
+
 }
