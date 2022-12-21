@@ -117,7 +117,7 @@ public class Notepad {
 			progress("Opening tab " + file.getName() + "...", 1, 2);
 			openTab(file.getName(), content, file);
 
-			hideProgress();
+			SwingUtilities.invokeLater(this::hideProgress);
 		} catch (IOException e) {
 			Actions.assertDialog(e);
 		}
@@ -258,7 +258,6 @@ public class Notepad {
 		frame.add(panel, BorderLayout.SOUTH);
 
 		return (tab) -> {
-			System.out.println("CALLED!!!!!");
 			final var updatedFile = tab.getFile();
 
 			saveStatus.setText(updatedFile == null ? "Unsaved file" : updatedFile.getAbsolutePath());

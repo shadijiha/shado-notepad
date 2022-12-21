@@ -42,6 +42,7 @@ public class RichHTMLEditor extends AbstractEditor {
 
 		AbstractDocument doc = (AbstractDocument) getDocument();
 		doc.setDocumentFilter(new ImageDeleteFilter(this));
+		
 
 		new Toolbar(notepad, tab, this);
 	}

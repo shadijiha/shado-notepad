@@ -13,7 +13,6 @@ public class NotepadTab extends JPanel {
 	private File file;
 	private AbstractEditor markdownPane;
 	private final JScrollPane scrollPane;
-	private boolean isSynced = false;
 	private final Notepad notepad;
 
 	public NotepadTab(String name, String text, Notepad notepad, File file) {
@@ -78,16 +77,7 @@ public class NotepadTab extends JPanel {
 	public void setFile(File file) {
 		this.file = file;
 	}
-
-	public void setIsSynced(boolean v) {
-		isSynced = v;
-		notepad.tabs.setTitleAt(notepad.getOpenTabs().indexOf(this), "[Synced] " + title);
-	}
-
-	public boolean isSynced() {
-		return isSynced;
-	}
-
+	
 	/**
 	 * If it is a file, then returns the name of the file. Otherwise, return the title
 	 *
