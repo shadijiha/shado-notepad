@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.*;
 import java.util.function.*;
 
+import static com.utils.Util.*;
+
 
 public class Notepad {
 
@@ -109,8 +111,13 @@ public class Notepad {
 
 	public void openTab(File file) {
 		try {
+			progress("Reading " + file.getAbsolutePath() + " content...", 0, 2);
 			var content = Files.readString(file.toPath());
+
+			progress("Opening tab " + file.getName() + "...", 1, 2);
 			openTab(file.getName(), content, file);
+
+			hideProgress();
 		} catch (IOException e) {
 			Actions.assertDialog(e);
 		}
@@ -251,6 +258,7 @@ public class Notepad {
 		frame.add(panel, BorderLayout.SOUTH);
 
 		return (tab) -> {
+			System.out.println("CALLED!!!!!");
 			final var updatedFile = tab.getFile();
 
 			saveStatus.setText(updatedFile == null ? "Unsaved file" : updatedFile.getAbsolutePath());

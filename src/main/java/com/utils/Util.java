@@ -21,15 +21,15 @@ public abstract class Util {
 	 *
 	 * @param e
 	 */
-	public static synchronized void execute(Runnable e) {
+	public static void execute(Runnable e) {
 		instance.executors.execute(e);
 	}
 
-	public static synchronized <T> Future<T> execute(Callable<T> task) {
+	public static <T> Future<T> execute(Callable<T> task) {
 		return instance.executors.submit(task);
 	}
 
-	public static synchronized void shutdown() {
+	public static void shutdown() {
 		try {
 			instance.executors.shutdown();
 			instance.executors.awaitTermination(1, TimeUnit.MINUTES);
@@ -38,7 +38,7 @@ public abstract class Util {
 		}
 	}
 
-	public static synchronized String getExtension(File file) {
+	public static String getExtension(File file) {
 		// convert the file name into string
 		String fileName = file.toString();
 
@@ -50,10 +50,12 @@ public abstract class Util {
 	}
 
 	public static void progress(String msg, int currentTask, int maxTasks) {
-		Actions.getAppInstance()
-				.showProgress()
-				.setProgressMsg(msg)
-				.setProgress((int) ((float) currentTask / (float) maxTasks * 100));
+		SwingUtilities.invokeLater(() -> {
+			Actions.getAppInstance()
+					.showProgress()
+					.setProgressMsg(msg)
+					.setProgress((int) ((float) currentTask / (float) maxTasks * 100));
+		});
 	}
 
 }

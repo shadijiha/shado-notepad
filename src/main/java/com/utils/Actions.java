@@ -10,13 +10,13 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.stream.*;
 
-import static com.utils.Util.progress;
+import static com.utils.Util.*;
 
 public abstract class Actions {
 
 	private static Notepad notepad = null;
 	static File appDataDir = new File(System.getenv("LOCALAPPDATA") + "/shado-notepad");
-	;
+	
 	private static Date workspaceDate = null;
 
 	/**
@@ -47,6 +47,7 @@ public abstract class Actions {
 	public static void exit() {
 		assert notepad != null : "You need to call setFrame at least once";
 
+		progress("Shutting down...", 1, 1);
 		try {
 			saveWorkSpace();
 			AppSettings.serialize();
