@@ -6,16 +6,17 @@ import com.utils.*;
 
 import javax.imageio.*;
 import javax.swing.*;
-import javax.swing.event.*;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.function.*;
 
 public class RichHTMLEditor extends AbstractEditor {
 	private Map<Integer, ImageMetadata> imagesMetadata;
+	private Toolbar toolbar;
 
 	private static final String META_DATA_BEGIN = "------------___ IMG METADATA ___------------";
 
@@ -45,7 +46,8 @@ public class RichHTMLEditor extends AbstractEditor {
 		doc.setDocumentFilter(new ImageDeleteFilter(this));
 		bindChangeEventToDoc(doc);
 
-		new Toolbar(notepad, tab, this);
+		toolbar = new Toolbar(notepad, tab, this);
+		toolbar.onChange(changeEvent);
 	}
 
 	@Override
@@ -123,6 +125,12 @@ public class RichHTMLEditor extends AbstractEditor {
 		ImageIcon icon = new ImageIcon(image);
 		icon.setImage(icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH));
 		insertIcon(icon, false, null, pos, width, height);
+	}
+
+	@Override
+	public void onChange(Consumer<Object> r) {
+		super.onChange(r);
+		toolbar.onChange(changeEvent);
 	}
 
 	/**

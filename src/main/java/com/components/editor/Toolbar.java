@@ -11,8 +11,11 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.font.*;
 import java.util.*;
+import java.util.function.*;
 
 public class Toolbar {
+
+	private volatile Consumer<Object> changeEvent;
 
 	public Toolbar(Notepad notepad, JPanel tab, RichHTMLEditor markdownPane) {
 		// TODO: move this shit from here
@@ -25,7 +28,10 @@ public class Toolbar {
 			JButton boldButton = new JButton("B");
 			var font = boldButton.getFont();
 			boldButton.setFont(new Font(font.getFontName(), Font.BOLD, font.getSize()));
-			boldButton.addActionListener(e -> boldAction.actionPerformed(new ActionEvent(markdownPane, ActionEvent.ACTION_PERFORMED, null)));
+			boldButton.addActionListener(e -> {
+				boldAction.actionPerformed(new ActionEvent(markdownPane, ActionEvent.ACTION_PERFORMED, null));
+				callChangeEvent(e);
+			});
 			toolbar.add(boldButton);
 		}
 		{
@@ -34,7 +40,10 @@ public class Toolbar {
 			JButton italicButton = new JButton("I");
 			var font = italicButton.getFont();
 			italicButton.setFont(new Font(font.getFontName(), Font.ITALIC, font.getSize()));
-			italicButton.addActionListener(e -> italicAction.actionPerformed(new ActionEvent(markdownPane, ActionEvent.ACTION_PERFORMED, null)));
+			italicButton.addActionListener(e -> {
+				italicAction.actionPerformed(new ActionEvent(markdownPane, ActionEvent.ACTION_PERFORMED, null));
+				callChangeEvent(e);
+			});
 			toolbar.add(italicButton);
 		}
 		{
@@ -45,7 +54,10 @@ public class Toolbar {
 			button.setFont(
 					new Font(font.getFontName(), Font.PLAIN, font.getSize()).deriveFont(Map.of(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON))
 			);
-			button.addActionListener(e -> action.actionPerformed(new ActionEvent(markdownPane, ActionEvent.ACTION_PERFORMED, null)));
+			button.addActionListener(e -> {
+				action.actionPerformed(new ActionEvent(markdownPane, ActionEvent.ACTION_PERFORMED, null));
+				callChangeEvent(e);
+			});
 			toolbar.add(button);
 		}
 		{
@@ -64,6 +76,7 @@ public class Toolbar {
 					int size = Integer.parseInt(field.getText());
 					Action action = new StyledEditorKit.FontSizeAction("font-size-" + size, size);
 					action.actionPerformed(new ActionEvent(markdownPane, ActionEvent.ACTION_PERFORMED, null));
+					callChangeEvent(e);
 				}
 			});
 			toolbar.add(field);
@@ -76,9 +89,9 @@ public class Toolbar {
 			field.setSelectedItem(currentFont.getFamily());
 			field.addActionListener(e -> {
 				String fontStr = field.getSelectedItem().toString();
-				System.out.println(fontStr);
-				Action action = new StyledEditorKit.FontFamilyAction("font-family-" + currentFont.getFamily(), currentFont.getFamily());
+				Action action = new StyledEditorKit.FontFamilyAction("font-family-" + fontStr, fontStr);
 				action.actionPerformed(new ActionEvent(markdownPane, ActionEvent.ACTION_PERFORMED, null));
+				callChangeEvent(e);
 			});
 			toolbar.add(field);
 		}
@@ -100,6 +113,8 @@ public class Toolbar {
 							Actions.assertDialog(ex);
 						}
 					}
+
+					callChangeEvent(e);
 				}
 			});
 			toolbar.add(insertImageButton);
@@ -107,4 +122,12 @@ public class Toolbar {
 		tab.add(toolbar, BorderLayout.NORTH);
 	}
 
+	public void onChange(Consumer<Object> changeEvent) {
+		this.changeEvent = changeEvent;
+	}
+
+	private void callChangeEvent(AWTEvent e) {
+		if (changeEvent != null)
+			changeEvent.accept(e);
+	}
 }

@@ -259,7 +259,7 @@ public abstract class Actions {
 					// Upload it files to cloud
 					int i = 2;
 					for (var tab : notepad.getOpenTabs()) {
-						if (!tab.hasChanged())
+						if (!tab.hasChanged() && tab.getLastSave() == null)
 							continue;
 
 						progress("Saving " + tab.getTabTitle() + " locally...", ++i, TOTAL_TASKS_SYNC);
