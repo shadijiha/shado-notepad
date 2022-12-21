@@ -16,7 +16,7 @@ public abstract class Actions {
 
 	private static Notepad notepad = null;
 	static File appDataDir = new File(System.getenv("LOCALAPPDATA") + "/shado-notepad");
-	
+
 	private static Date workspaceDate = null;
 
 	/**
@@ -212,13 +212,21 @@ public abstract class Actions {
 				int i = 1;
 				for (var tab : tabs) {
 					// Save the content
-					progress("Saving " + tab.getTabTitle(), ++i, TOTAL_TASKS);
-					var file = saveTab(tab);
-					builder.append("local\t" + file.getAbsolutePath()).append("\n");
+					if (tab.hasChanged()) {
+						progress("Saving " + tab.getTabTitle(), ++i, TOTAL_TASKS);
+						var file = saveTab(tab);
+					}
+
+					if (tab.getFile() != null)
+						builder.append("local\t")
+								.append(tab.getFile().getAbsolutePath())
+								.append("\n");
 				}
 			}
 
-			builder.append("open\t" + notepad.getOpenTabs().indexOf(notepad.getSelectedTab())).append("\n");
+			builder.append("open\t")
+					.append(notepad.getOpenTabs().indexOf(notepad.getSelectedTab()))
+					.append("\n");
 
 			// Write it locally
 			try (PrintWriter writer = new PrintWriter(new FileOutputStream(workdspace))) {
@@ -251,7 +259,11 @@ public abstract class Actions {
 					// Upload it files to cloud
 					int i = 2;
 					for (var tab : notepad.getOpenTabs()) {
+						if (!tab.hasChanged())
+							continue;
+
 						progress("Saving " + tab.getTabTitle() + " locally...", ++i, TOTAL_TASKS_SYNC);
+
 						File file = new File(appDataDir, tab.getFileName());
 						PrintWriter writer = new PrintWriter(new FileOutputStream(file));
 						tab.write(writer);
@@ -259,6 +271,7 @@ public abstract class Actions {
 
 						// Then upload the file to cloud
 						progress("Uploading " + tab.getTabTitle() + " to cloud...", ++i, TOTAL_TASKS_SYNC);
+
 						var destName = Workspace.CloudPath + tab.getFileName();
 						if (!client.files.exists(destName))
 							client.files.newFile(destName);

@@ -7,6 +7,7 @@ import com.utils.*;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import java.util.*;
 
 public class NotepadTab extends JPanel {
 	private String title;
@@ -14,6 +15,9 @@ public class NotepadTab extends JPanel {
 	private AbstractEditor markdownPane;
 	private final JScrollPane scrollPane;
 	private final Notepad notepad;
+
+	protected Date lastSave;
+	private boolean hasChanged;
 
 	public NotepadTab(String name, String text, Notepad notepad, File file) {
 		super(new BorderLayout());
@@ -23,6 +27,12 @@ public class NotepadTab extends JPanel {
 		setBackground(Color.WHITE);
 
 		markdownPane = AbstractEditor.factory(notepad, this, text, file);
+		markdownPane.onChange(e -> {
+			if (hasChanged) return;
+			hasChanged = true;
+			notepad.tabs.setTitleAt(notepad.getOpenTabs().indexOf(this), "*" + title);
+			if (notepad.progressUIUpdater != null) notepad.progressUIUpdater.accept(this);
+		});
 		AppSettings.instance().addObserver(markdownPane);
 
 		scrollPane = new JScrollPane(markdownPane);
@@ -69,6 +79,11 @@ public class NotepadTab extends JPanel {
 		try (PrintWriter writer = new PrintWriter(new FileOutputStream(file))) {
 			markdownPane.serialize(writer);
 			writer.close();
+			hasChanged = false;
+
+			lastSave = new Date();
+			notepad.tabs.setTitleAt(notepad.getOpenTabs().indexOf(this), title);
+			notepad.progressUIUpdater.accept(this);
 		} catch (Exception e) {
 			Actions.assertDialog(false, e.getMessage());
 		}
@@ -77,7 +92,11 @@ public class NotepadTab extends JPanel {
 	public void setFile(File file) {
 		this.file = file;
 	}
-	
+
+	public boolean hasChanged() {
+		return hasChanged;
+	}
+
 	/**
 	 * If it is a file, then returns the name of the file. Otherwise, return the title
 	 *
@@ -88,5 +107,4 @@ public class NotepadTab extends JPanel {
 			return file.getName();
 		return title;
 	}
-
 }

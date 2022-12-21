@@ -6,6 +6,7 @@ import com.utils.*;
 
 import javax.imageio.*;
 import javax.swing.*;
+import javax.swing.event.*;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.image.*;
@@ -42,7 +43,7 @@ public class RichHTMLEditor extends AbstractEditor {
 
 		AbstractDocument doc = (AbstractDocument) getDocument();
 		doc.setDocumentFilter(new ImageDeleteFilter(this));
-		
+		bindChangeEventToDoc(doc);
 
 		new Toolbar(notepad, tab, this);
 	}

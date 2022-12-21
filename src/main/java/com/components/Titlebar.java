@@ -149,7 +149,7 @@ public class Titlebar extends JPanel {
 		 */
 		Map<String, MenuData[]> menus = Map.of(
 				"File", new MenuData[]{
-						MenuData.of("New", e -> notepad.openTab("Untitled " + AppSettings.getDate() + ".srtf", ""), "control N"),
+						MenuData.of("New", e -> notepad.openTab("Untitled " + Util.getDate() + ".srtf", ""), "control N"),
 						MenuData.of("Open", this::openFile, "control O"),
 						MenuData.of("Save", e -> notepad.save(), "control S"),
 						MenuData.separator(),

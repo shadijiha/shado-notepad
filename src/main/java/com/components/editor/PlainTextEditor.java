@@ -1,9 +1,12 @@
 package com.components.editor;
 
 import com.*;
+import com.filters.*;
 import com.utils.*;
 
 import javax.swing.*;
+import javax.swing.event.*;
+import javax.swing.text.*;
 import java.awt.*;
 import java.io.*;
 
@@ -21,6 +24,9 @@ public class PlainTextEditor extends AbstractEditor {
 		setFont(iosFont);
 		setFocusable(true);
 
+		AbstractDocument doc = (AbstractDocument) getDocument();
+		bindChangeEventToDoc(doc);
+
 		try {
 			deserialize(text);
 		} catch (IOException e) {
@@ -29,4 +35,5 @@ public class PlainTextEditor extends AbstractEditor {
 
 		//new Toolbar(notepad, tab, this);
 	}
+
 }

@@ -25,7 +25,7 @@ public class Notepad {
 	private Titlebar titleBar;
 	private JFrame frame;
 
-	private volatile Consumer<NotepadTab> progressUIUpdater;
+	protected volatile Consumer<NotepadTab> progressUIUpdater;
 	private volatile int progress = 0;
 	private volatile boolean showProgress = true;
 	private volatile String currentMessage = "Test message";
@@ -151,6 +151,8 @@ public class Notepad {
 	}
 
 	public NotepadTab getSelectedTab() {
+		if (getOpenTabs().size() == 0)
+			return null;
 		return getOpenTabs().get(tabs.getSelectedIndex());
 	}
 
@@ -229,7 +231,8 @@ public class Notepad {
 	 * @return Returns a function that should be called to update the info bar (call on Tab change event)
 	 */
 	private Consumer<NotepadTab> setupInfoBar(JFrame frame) {
-		final var file = getSelectedTab().getFile();
+		final var selectedTab = getSelectedTab();
+		final var file = selectedTab != null ? getSelectedTab().getFile() : null;
 
 		final JPanel panel = new JPanel(new BorderLayout());
 		panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -260,7 +263,10 @@ public class Notepad {
 		return (tab) -> {
 			final var updatedFile = tab.getFile();
 
-			saveStatus.setText(updatedFile == null ? "Unsaved file" : updatedFile.getAbsolutePath());
+			saveStatus.setText(String.format("%s   %s",
+					tab.lastSave == null ? "" : "[Last save " + Util.formatDate(tab.lastSave) + "]",
+					updatedFile == null ? "Unsaved file" : updatedFile.getAbsolutePath()
+			));
 			progressBar.setValue(progress);
 			progressBar.setVisible(showProgress);
 			progressLabel.setText(progressBar.getValue() + "%");

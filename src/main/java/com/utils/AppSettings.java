@@ -76,7 +76,7 @@ public class AppSettings extends Observable<AppSettings> {
 
 	public static void serialize() {
 		Util.execute(() -> {
-			synchronized (gson){
+			synchronized (gson) {
 
 				String json = gson.toJson(instance, instance.getClass());
 
@@ -102,7 +102,7 @@ public class AppSettings extends Observable<AppSettings> {
 		// Check if email and password are defined
 		var email = get("shado_cloud_email");
 		var pass = get("shado_cloud_pass");
-		if (!email.isEmpty() && !pass.isEmpty())	{
+		if (!email.isEmpty() && !pass.isEmpty()) {
 			client = new ShadoCloudClient(email, pass);
 			Util.execute(() -> {
 				try {
@@ -114,26 +114,7 @@ public class AppSettings extends Observable<AppSettings> {
 		}
 	}
 
-	public static String getDate(String pattern) {
-		// Create an instance of SimpleDateFormat used for formatting
-		// the string representation of date according to the chosen pattern
-		DateFormat df = new SimpleDateFormat(pattern);
-
-		// Get the today date using Calendar object.
-		Date today = Calendar.getInstance().getTime();
-		// Using DateFormat format method we can create a string
-		// representation of a date with the defined format.
-		String todayAsString = df.format(today);
-
-		// Print the result!
-		return todayAsString;
-	}
-
-	public static String getDate() {
-		return getDate("MM-dd-yyyy HH-mm-ss");
-	}
-
-	public static File getSettingsFileDir()	{
+	public static File getSettingsFileDir() {
 		return new File(Actions.getAppDataDir(), "settings.json");
 	}
 

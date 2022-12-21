@@ -5,15 +5,19 @@ import com.observer.*;
 import com.utils.*;
 
 import javax.swing.*;
+import javax.swing.event.*;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.dnd.*;
 import java.io.*;
+import java.util.function.*;
 
 public abstract class AbstractEditor extends JTextPane implements Observer<AppSettings> {
 
 	protected Notepad notepad;
 	protected JPanel tab;
+	protected Consumer<DocumentEvent> changeEvent;
 
 	public AbstractEditor(Notepad notepad, JPanel tab, String text) {
 		this.notepad = notepad;
@@ -50,6 +54,10 @@ public abstract class AbstractEditor extends JTextPane implements Observer<AppSe
 			this.setFont(new Font(AppSettings.get("font_family"), Font.PLAIN, (int) AppSettings.getNum("font_size")));
 	}
 
+	public void onChange(Consumer<DocumentEvent> r) {
+		changeEvent = r;
+	}
+
 	protected DropTarget onDrop() {
 		return new DropTarget() {
 			public synchronized void drop(DropTargetDropEvent evt) {
@@ -68,4 +76,25 @@ public abstract class AbstractEditor extends JTextPane implements Observer<AppSe
 		};
 	}
 
+	protected void bindChangeEventToDoc(AbstractDocument doc) {
+		doc.addDocumentListener(new DocumentListener() {
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				if (changeEvent != null)
+					changeEvent.accept(e);
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				if (changeEvent != null)
+					changeEvent.accept(e);
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				//if (changeEvent != null)
+				//	changeEvent.accept(e);
+			}
+		});
+	}
 }
