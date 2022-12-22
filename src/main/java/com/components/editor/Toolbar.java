@@ -12,6 +12,7 @@ import javax.swing.text.html.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.font.*;
+import java.io.*;
 import java.util.*;
 import java.util.function.*;
 
@@ -101,8 +102,25 @@ public class Toolbar {
 		{
 			JButton listBtn = new JButton("List");
 			listBtn.addActionListener(e -> {
-				insertList(markdownPane);
+				try {
+					insertList(markdownPane, "ul");
+				} catch (Exception ex) {
+					Actions.assertDialog("Unable to insert a List item! ", ex);
+				}
 			});
+			toolbar.add(listBtn);
+		}
+
+		{
+			JButton listBtn = new JButton("Ordered");
+			listBtn.addActionListener(e -> {
+				try {
+					insertList(markdownPane, "ol");
+				} catch (Exception ex) {
+					Actions.assertDialog("Unable to insert a List item! ", ex);
+				}
+			});
+			toolbar.add(listBtn);
 		}
 
 		{
@@ -132,9 +150,21 @@ public class Toolbar {
 		tab.add(toolbar, BorderLayout.NORTH);
 	}
 
-	private void insertList(RichHTMLEditor editor) {
+	private void insertList(RichHTMLEditor editor, String type) throws Exception {
 		HTMLDocument doc = (HTMLDocument) editor.getStyledDocument();
-		
+
+		var elementAtPos = getElementAtCaret(doc, editor);
+
+		int caretPos = editor.getCaretPosition();
+
+		String id = "ul_" + (int) (Math.random() * 1e9);
+		String htmlBegin = String.format("<%s id=\"%s\" style=\"text-align: left;\"><li style=\"text-align: left;\">", type, id);
+		String html = String.format("%s</li></%s>", htmlBegin, type);
+
+		doc.insertAfterEnd(elementAtPos, html);
+		editor.setCaretPosition(caretPos + 1);
+	}
+
 	public void onChange(Consumer<Object> changeEvent) {
 		this.changeEvent = changeEvent;
 	}
@@ -142,5 +172,36 @@ public class Toolbar {
 	private void callChangeEvent(AWTEvent e) {
 		if (changeEvent != null)
 			changeEvent.accept(e);
+	}
+
+	private Element getBodyElement(HTMLDocument htmlDoc) {
+		Element[] roots = htmlDoc.getRootElements(); // #0 is the HTML element, #1 the bidi-root
+		Element body = null;
+		for (int i = 0; i < roots[0].getElementCount(); i++) {
+			Element element = roots[0].getElement(i);
+			if (element.getAttributes().getAttribute(StyleConstants.NameAttribute) == HTML.Tag.BODY) {
+				body = element;
+				break;
+			}
+		}
+		return body;
+	}
+
+	private Element getElementAtCaret(HTMLDocument document, JTextPane myJTextPane) {
+		int p = myJTextPane.getCaretPosition();
+		Element el = document.getCharacterElement(p);
+		System.out.println(el.getName());
+		return el;
+	}
+
+	private void setAttribute(Element element, HTML.Attribute attr,
+							  Object value) {
+		HTMLDocument doc = (HTMLDocument) element.getDocument();
+		int startOffset = element.getStartOffset();
+		int endOffset = element.getEndOffset();
+		MutableAttributeSet attributeSet = new SimpleAttributeSet();
+		attributeSet.addAttribute(attr, value);
+		doc.setCharacterAttributes(startOffset, endOffset - startOffset,
+				attributeSet, false);
 	}
 }
