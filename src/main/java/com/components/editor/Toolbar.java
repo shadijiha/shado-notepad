@@ -6,7 +6,9 @@ import com.swing_ext.*;
 import com.utils.*;
 
 import javax.swing.*;
+import javax.swing.event.*;
 import javax.swing.text.*;
+import javax.swing.text.html.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.font.*;
@@ -76,12 +78,19 @@ public class Toolbar {
 			field.setSelectedItem(currentFont.getFamily());
 			field.addActionListener(e -> {
 				String fontStr = field.getSelectedItem().toString();
-				System.out.println(fontStr);
-				Action action = new StyledEditorKit.FontFamilyAction("font-family-" + currentFont.getFamily(), currentFont.getFamily());
+				Action action = new StyledEditorKit.FontFamilyAction("font-family-" + fontStr, fontStr);
 				action.actionPerformed(new ActionEvent(markdownPane, ActionEvent.ACTION_PERFORMED, null));
 			});
 			toolbar.add(field);
 		}
+
+		{
+			JButton listBtn = new JButton("List");
+			listBtn.addActionListener(e -> {
+				insertList(markdownPane);
+			});
+		}
+
 		{
 			JButton insertImageButton = new JButton("Insert Image");
 			insertImageButton.addActionListener(new ActionListener() {
@@ -107,4 +116,8 @@ public class Toolbar {
 		tab.add(toolbar, BorderLayout.NORTH);
 	}
 
+	private void insertList(RichHTMLEditor editor) {
+		HTMLDocument doc = (HTMLDocument) editor.getStyledDocument();
+		
+	}
 }
