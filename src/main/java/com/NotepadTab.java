@@ -97,6 +97,10 @@ public class NotepadTab extends JPanel {
 		return hasChanged;
 	}
 
+	public void setHasChanged(boolean v) {
+		hasChanged = v;
+	}
+
 	/**
 	 * If it is a file, then returns the name of the file. Otherwise, return the title
 	 *

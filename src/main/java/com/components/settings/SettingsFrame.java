@@ -8,10 +8,12 @@ import javax.swing.*;
 import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.*;
 import java.util.List;
 
 public class SettingsFrame extends JDialog {
 	private JFrame frame;
+	private JTabbedPane tabbedPane;
 
 	public SettingsFrame(JFrame parent) {
 		this.frame = parent;
@@ -25,16 +27,26 @@ public class SettingsFrame extends JDialog {
 		setVisible(true);
 	}
 
+	public SettingsFrame(JFrame parent, String selectedTab) {
+		this(parent);
+
+		int index = SettingsTab.SettingsTabsIdx.get(selectedTab.toLowerCase());
+		tabbedPane.setSelectedIndex(index);
+	}
+
 	private void setup() {
+		// Clear some metadata
+		SettingsTab.SettingsTabsIdx.clear();
+		SettingsTab.CurrentPos = 0;
 
 		final List<SettingsTab> tabs = List.of(
 				generalTab(),
 				syncTab(),
 				themeTab()
 		);
-
+		
 		// Create a JTabbedPane and set it to be vertically oriented
-		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.LEFT);
+		tabbedPane = new JTabbedPane(JTabbedPane.LEFT);
 		for (var tab : tabs) {
 			tabbedPane.addTab(tab.label, tab.panel);
 		}
@@ -147,6 +159,9 @@ public class SettingsFrame extends JDialog {
 	 * Helper class
 	 */
 	private static class SettingsTab {
+		private static final Map<String, Integer> SettingsTabsIdx = new HashMap<>();
+		private static int CurrentPos = 0;
+
 		public final String label;
 		public JPanel panel;
 
@@ -154,6 +169,8 @@ public class SettingsFrame extends JDialog {
 		private SettingsTab(String label, JPanel panel) {
 			this.label = label;
 			this.panel = panel;
+
+			SettingsTabsIdx.put(label.toLowerCase(), CurrentPos++);
 		}
 
 		private static SettingsTab of(String label, JPanel panel) {

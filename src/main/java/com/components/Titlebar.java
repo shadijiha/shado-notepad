@@ -147,7 +147,7 @@ public class Titlebar extends JPanel {
 		/**
 		 * All menu
 		 */
-		Map<String, MenuData[]> menus = Map.of(
+		SortedMap<String, MenuData[]> menus = Util.<String, MenuData[]>sortedMap(
 				"File", new MenuData[]{
 						MenuData.of("New", e -> notepad.openTab("Untitled " + Util.getDate() + ".srtf", ""), "control N"),
 						MenuData.of("Open", this::openFile, "control O"),
@@ -156,6 +156,13 @@ public class Titlebar extends JPanel {
 						MenuData.of("Settings", e -> new SettingsFrame(frame)),
 						MenuData.separator(),
 						MenuData.of("Exit", e -> Actions.exit(), "control W")
+				},
+				"Sync", new MenuData[]{
+						MenuData.of("Sync now", e -> {
+							Actions.getAppInstance().getOpenTabs().forEach(tab -> tab.setHasChanged(true));
+							Actions.saveWorkSpace();
+						}),
+						MenuData.of("Sync settings", e -> new SettingsFrame(frame, "sync"))
 				}
 		);
 

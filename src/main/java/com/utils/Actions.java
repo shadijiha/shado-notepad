@@ -195,7 +195,7 @@ public abstract class Actions {
 			notepad.hideProgress();
 	}
 
-	private static void saveWorkSpace() {
+	public static void saveWorkSpace() {
 		Util.execute(() -> {
 			File workdspace = getWorkspaceFileDir();
 			var tabs = notepad.getOpenTabs();

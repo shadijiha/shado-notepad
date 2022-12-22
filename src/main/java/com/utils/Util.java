@@ -1,7 +1,10 @@
 package com.utils;
 
+import com.components.*;
+
 import javax.swing.*;
 import java.io.*;
+import java.nio.file.*;
 import java.text.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -84,5 +87,42 @@ public abstract class Util {
 		Date today = Calendar.getInstance().getTime();
 		String todayAsString = df.format(today);
 		return todayAsString;
+	}
+
+	public static String getAnIncrementVersion() throws IOException {
+		final String path = "out/artifacts/shado_notepad_jar/version";
+
+		// Read the version file
+		File file = new File(path);
+
+		// If it doesn't exist, then create it
+		if (!file.exists()) {
+			PrintWriter writer = new PrintWriter(new FileOutputStream(file));
+			writer.print("1.0.0");
+			writer.close();
+			return "1.0.0";
+		}
+
+		String versionRaw = Files.readString(file.toPath()).trim();
+		String[] tokens = versionRaw.split("\\.");
+		int minorVersion = Integer.parseInt(tokens[tokens.length - 1]);
+
+		PrintWriter writer = new PrintWriter(new FileOutputStream(file));
+		for (int i = 0; i < tokens.length - 1; i++) {
+			writer.print(tokens[i] + ".");
+		}
+		writer.print(++minorVersion);
+		writer.close();
+		return versionRaw;
+	}
+
+	public static <K, V> SortedMap<K, V> sortedMap(Object... keysValues) {
+		SortedMap<K, V> sortedMap = new TreeMap<>();
+
+		for (int i = 0; i < keysValues.length - 1; i += 2) {
+			sortedMap.put((K) keysValues[i], (V) keysValues[i + 1]);
+		}
+
+		return sortedMap;
 	}
 }

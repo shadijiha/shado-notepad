@@ -31,6 +31,12 @@ public class Notepad {
 	private volatile String currentMessage = "Test message";
 
 	public static void main(String[] args) {
+		try {
+			System.out.printf("[Info]\tStarting v%s\n", getAnIncrementVersion());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 		SwingUtilities.invokeLater(() -> {
 			Notepad notepad = new Notepad();
 		});
