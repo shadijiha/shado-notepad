@@ -17,7 +17,7 @@ public abstract class AbstractEditor extends JTextPane implements Observer<AppSe
 
 	protected Notepad notepad;
 	protected JPanel tab;
-	protected Consumer<DocumentEvent> changeEvent;
+	protected Consumer<Object> changeEvent;
 
 	public AbstractEditor(Notepad notepad, JPanel tab, String text) {
 		this.notepad = notepad;
@@ -54,7 +54,7 @@ public abstract class AbstractEditor extends JTextPane implements Observer<AppSe
 			this.setFont(new Font(AppSettings.get("font_family"), Font.PLAIN, (int) AppSettings.getNum("font_size")));
 	}
 
-	public void onChange(Consumer<DocumentEvent> r) {
+	public void onChange(Consumer<Object> r) {
 		changeEvent = r;
 	}
 

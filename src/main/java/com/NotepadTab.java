@@ -107,4 +107,8 @@ public class NotepadTab extends JPanel {
 			return file.getName();
 		return title;
 	}
+
+	public Date getLastSave() {
+		return lastSave;
+	}
 }
