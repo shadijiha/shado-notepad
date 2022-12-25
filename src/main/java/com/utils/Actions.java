@@ -104,7 +104,7 @@ public abstract class Actions {
 		return getWorkspaceFileDir().exists();
 	}
 
-	private static void loadWorkSpace() throws Exception {
+	public static void loadWorkSpace(boolean includeCloud) throws Exception {
 		File workdspace = getWorkspaceFileDir();
 
 		// Apply the local workspace
@@ -122,7 +122,7 @@ public abstract class Actions {
 
 		// Load Cloud
 		// get the cloud file text
-		if (AppSettings.getBool("sync_enabled")) {
+		if (AppSettings.getBool("sync_enabled") && includeCloud) {
 			Util.execute(() -> {
 				try {
 					final int TOTAL_TASKS = 6;
@@ -193,6 +193,10 @@ public abstract class Actions {
 			});
 		} else
 			notepad.hideProgress();
+	}
+
+	public static void loadWorkSpace() throws Exception {
+		loadWorkSpace(true);
 	}
 
 	public static void saveWorkSpace() {

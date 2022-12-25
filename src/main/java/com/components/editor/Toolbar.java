@@ -154,15 +154,14 @@ public class Toolbar {
 		HTMLDocument doc = (HTMLDocument) editor.getStyledDocument();
 
 		var elementAtPos = getElementAtCaret(doc, editor);
-
-		int caretPos = editor.getCaretPosition();
-
-		String id = "ul_" + (int) (Math.random() * 1e9);
-		String htmlBegin = String.format("<%s id=\"%s\" style=\"text-align: left;\"><li style=\"text-align: left;\">", type, id);
+		
+		String id = type + "_" + (int) (Math.random() * 1e9);
+		String htmlBegin = String.format("<%s id=\"%s\" style=\"text-align: left!important;\"><li style=\"text-align: left!important;\">", type, id);
 		String html = String.format("%s</li></%s>", htmlBegin, type);
 
 		doc.insertAfterEnd(elementAtPos, html);
-		editor.setCaretPosition(caretPos + 1);
+		//int caretPos = editor.getCaretPosition();
+		//editor.setCaretPosition(caretPos + 1);
 	}
 
 	public void onChange(Consumer<Object> changeEvent) {
@@ -190,7 +189,6 @@ public class Toolbar {
 	private Element getElementAtCaret(HTMLDocument document, JTextPane myJTextPane) {
 		int p = myJTextPane.getCaretPosition();
 		Element el = document.getCharacterElement(p);
-		System.out.println(el.getName());
 		return el;
 	}
 

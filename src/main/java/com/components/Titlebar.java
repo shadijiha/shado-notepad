@@ -162,6 +162,14 @@ public class Titlebar extends JPanel {
 							Actions.getAppInstance().getOpenTabs().forEach(tab -> tab.setHasChanged(true));
 							Actions.saveWorkSpace();
 						}),
+						MenuData.of("Force load local workspace", e -> {
+							try {
+								Actions.loadWorkSpace(false);
+							} catch (Exception ex) {
+								Actions.assertDialog(ex);
+							}
+						}),
+						MenuData.separator(),
 						MenuData.of("Sync settings", e -> new SettingsFrame(frame, "sync"))
 				}
 		);
