@@ -5,10 +5,8 @@ import com.google.gson.annotations.*;
 import com.observer.Observable;
 import com.shadocloud.nest.*;
 
-import javax.swing.*;
 import java.io.*;
 import java.nio.file.*;
-import java.text.*;
 import java.util.*;
 
 public class AppSettings extends Observable<AppSettings> {
@@ -126,6 +124,10 @@ public class AppSettings extends Observable<AppSettings> {
 	 */
 	public static boolean hasChanged(String key) {
 		return instance.changedFields.contains(key);
+	}
+
+	public static ShadoCloudClient getClient() {
+		return client;
 	}
 
 	@Override

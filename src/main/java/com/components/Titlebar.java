@@ -151,6 +151,7 @@ public class Titlebar extends JPanel {
 				"File", new MenuData[]{
 						MenuData.of("New", e -> notepad.openTab("Untitled " + Util.getDate() + ".srtf", ""), "control N"),
 						MenuData.of("Open", this::openFile, "control O"),
+						MenuData.of("Open from cloud", this::openCouldFile, "control shift O"),
 						MenuData.of("Save", e -> notepad.save(), "control S"),
 						MenuData.separator(),
 						MenuData.of("Settings", e -> new SettingsFrame(frame)),
@@ -209,6 +210,11 @@ public class Titlebar extends JPanel {
 		if (file != null) {
 			notepad.openTab(file);
 		}
+	}
+
+	private void openCouldFile(ActionEvent actionEvent) {
+		ShadoCloudFileChooser chooser = new ShadoCloudFileChooser("");
+		chooser.openDialog();
 	}
 
 	/**

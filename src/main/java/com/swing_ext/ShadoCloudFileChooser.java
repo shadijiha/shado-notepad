@@ -1,38 +1,32 @@
 package com.swing_ext;
 
-import com.shadocloud.nest.*;
+import com.utils.*;
 
 import javax.swing.*;
-import javax.swing.filechooser.*;
 import java.io.*;
 
-public class ShadoCloudFileChooser {
+public class ShadoCloudFileChooser extends FileChooser {
 
-	public ShadoCloudFileChooser() throws Exception {
+	public ShadoCloudFileChooser(String description, String... extensions) {
+		super(description, extensions);
+		chooser = new JFileChooser(new ShadoFile(""), new ShadoCloudFileView());
+		chooser.setCurrentDirectory(new ShadoFile(""));
 
-		JFileChooser chooser = new JFileChooser();
-		ShadoCloudClient client = new ShadoCloudClient("shadi@shado.com", "shadi1234");
-		client.auth.login();
-		chooser.setFileSystemView(new ShadoCloudFileSystemView());
-		chooser.showOpenDialog(null);
+		chooser.addPropertyChangeListener(e -> {
+			System.out.printf("%s\t%s --> %s\n", e.getPropertyName(), e.getOldValue(), e.getNewValue());
+			chooser.rescanCurrentDirectory();
+		});
 	}
 
-	private static class ShadoCloudFileSystemView extends FileSystemView {
+	@Override
+	public File openDialog() {
+		chooser.setDialogTitle("Open file");
 
-		@Override
-		public File createNewFolder(File containingDir) throws IOException {
-			return null;
+		int userSelection = chooser.showOpenDialog(Actions.getAppInstance().getFrame());
+		if (userSelection == JFileChooser.APPROVE_OPTION) {
+			var file = chooser.getSelectedFile();
+			return file;
 		}
-
-		@Override
-		public File[] getFiles(File dir, boolean useFileHiding) {
-//			try {
-//				var temp = client.directories.list("");
-//				return Arrays.stream(temp).map(e -> new File(e.path)).toArray(File[]::new);
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-			return null;
-		}
+		return null;
 	}
 }

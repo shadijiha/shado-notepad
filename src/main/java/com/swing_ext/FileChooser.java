@@ -7,11 +7,11 @@ import javax.swing.filechooser.*;
 import java.io.*;
 
 public class FileChooser {
-	public static final String[] TextFiles = new String[]{"txt", "text", "srtf", "js", "json", "yaml", "cpp", "c", "h", "ts", "py", "md", "java", "cs"};
+	public static final String[] TextFiles = new String[]{"txt", "text", "rtf", "srtf", "js", "json", "yaml", "cpp", "c", "h", "ts", "py", "md", "java", "cs"};
 	public static final String[] ImageFiles = new String[]{"png", "jpg", "jpeg", "tif", "gif"};
 
 	private static File lastDir = null;
-	private final JFileChooser chooser;
+	protected JFileChooser chooser;
 
 	public FileChooser(String description, String... extensions) {
 		if (lastDir == null) {
